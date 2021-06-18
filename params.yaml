@@ -1,0 +1,8 @@
+login: '4610043559999'
+password: ',Q}*#mFDdpjwH1LXtw'
+url: 'https://srs.gs1ru.org/GS46_Interfaces/GS1RU_Operations'
+GTIN_LIST_path: 'D:/CRPT/2021.05_май/тестирование/' #'D:/CRPT/2021.04_апрель/'
+GTIN_LIST_file: 'GTIN_list.csv'
+output_folder: 'D:/CRPT/2021.05_май/тестирование/'
+output_file: 'test_output_03.06.2021.xlsx'
+Attributes_list: ['PROD_COVER_GTIN', 'PROD_DESC', 'PROD_COUNT', 'WEB_90001854', 'WEB_90001722', 'WEB_90001723', 'WEB_90001731', 'WEB_90001709', 'WEB_90000196', 'WEB_90001809', 'WEB_90000626']
