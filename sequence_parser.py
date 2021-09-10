@@ -1,4 +1,6 @@
 from func import GetTable
+from func import splitter
+from func import splitter_joiner
 import pandas as pd
 pd.options.display.max_colwidth = 150
 import requests
@@ -22,15 +24,15 @@ with open('params.yaml', 'r', encoding='UTF-8' ) as f:
 url = params['url']
 login = params['login']
 password = params['password']
-''' СПИСОК GTIN'''
-GTIN_LIST_path = params['GTIN_LIST_path']
-GTIN_LIST_file = params['GTIN_LIST_file']
+''' ВХОДНОЙ ФАЙЛ'''
+input_path = params['input_path']
+input_file = params['input_file']
+
 ''' РЕЗУЛЬТАТ ВЫГРУЗКИ '''
 output_folder = params['output_folder']
 output_file = params['output_file']
 ''' ЗАДАИМ СПИСОК АТРИБУТОВ'''
 Attributes_list = params['Attributes_list']
-
 
 ''' соберем авторизацию'''
 auth = HTTPBasicAuth(login, password)
@@ -41,31 +43,23 @@ def cal_multi_col(row):
     return [out]
 
  #################
-""" НИЖЕ ТЕСТОВЫЙ ПРИМЕР"""
-'''
-df_test = pd.DataFrame({'GTIN':['4620005721227', '4620119120145'], 'GS1Attr':['WEB_90001853','WEB_90001771']})
 
-df_test['GS1_values'] = df_test.apply(cal_multi_col, axis=1, result_type='expand')
+full_input_path = input_path + input_file
+df = pd.read_excel(full_input_path, dtype= {'GTIN': object})
+df = df.loc[:,['GTIN', 'GS1Attr']]
+df.info()
+
+# разобъем на столбцы
+df['value_in_GS1'] = df.apply(cal_multi_col, axis=1, result_type='expand')
+df['variant']      = df['value_in_GS1'].map(lambda x: list(x.split(' '))[0] if list(x.split(' '))[0] != 'NaN' else '')
+df['errCode']      = df['value_in_GS1'].map(lambda x: splitter(x, 1))
+df['GTIN']         = df['value_in_GS1'].map(lambda x: splitter(x, 2))
+#df['idRecord'] = df['value_in_GS1'].map(lambda x: list(x.split(' '))[3] if list(x.split(' '))[3] != 'NaN' else 'NULL')
+df['value']        = df['value_in_GS1'].map(lambda x: splitter_joiner(x))
+
+full_output_path = output_folder + output_file
 try:
-    df_test.to_excel('D:/CRPT/2021.05_май/внесение изменений/загруженые файлы импорты/Молочная продукция/concatinated/df_test_result.xlsx', index=True, sheet_name='sheet_1')
-    print('файл успешно записался.. наверное..')
-except PermissionError:
-    print('\nфайл не доступен для записи\n')
-'''
-
-
-
- #################
-""" НИЖЕ РЕАЛЬНЫЙ РАБОЧИЙ ПРИМЕР  """
-df_first_try = pd.read_excel('D:/CRPT/2021.05_май/внесение изменений/загруженые файлы импорты/Молочная продукция/concatinated/concatinated.xlsx', dtype= {'GTIN': object})
-df_first_try = df_first_try.loc[:,['GTIN', 'GS1Attr']]
-df_first_try.info()
-
-#TODO добавить замену Nan на NULL
-df_first_try['value_in_GS1'] = df_first_try.apply(cal_multi_col, axis=1, result_type='expand')
-
-try:
-    df_first_try.to_excel('D:/CRPT/2021.05_май/внесение изменений/загруженые файлы импорты/Молочная продукция/concatinated/first_result_2021.06.04_1320.xlsx', index=True, sheet_name='sheet_1')
+    df.to_excel(full_output_path, index=True, sheet_name='sheet_1')
     print('файл успешно записался.. наверное..')
 except PermissionError:
     print('\nфайл не доступен для записи\n')

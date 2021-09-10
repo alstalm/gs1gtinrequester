@@ -4,6 +4,8 @@ import requests
 from table_bulider import table_bulider
 import yaml
 from requests.auth import HTTPBasicAuth
+from retry import retry  #pip install retry
+
 
 with open('params.yaml', 'r', encoding='UTF-8' ) as f:
     params = yaml.safe_load(f)
@@ -27,14 +29,14 @@ def gtin_list_combiner(GTIN_list):
         #print('')
     return row_set
 
-
+@retry(TimeoutError, tries = 5, delay=1, max_delay = 180, backoff = 3 )
 def get_curent_df(curent_gtin_list, attr_list, url, auth):
     """
     Собирает один запрос из нескольких гтин. Запрашивает ГС1 по полученнуму на входе списку гтинов и формирует датафрейм
     """
 
     body_prefix = """<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:org.gs1ru.gs46.intf"><SOAP-ENV:Body><ns1:GetItemByGTIN>"""
-    body_postfix = """<ns1:lang>RU</ns1:lang><ns1:showMeta>0</ns1:showMeta><ns1:noCache>0</ns1:noCache><ns1:loadChangeVersion>0</ns1:loadChangeVersion><ns1:noCascade>0</ns1:noCascade></ns1:GetItemByGTIN></SOAP-ENV:Body></SOAP-ENV:Envelope>"""
+    body_postfix = """<ns1:lang>RU</ns1:lang><ns1:showMeta>0</ns1:showMeta><ns1:noCache>0</ns1:noCache><ns1:loadChangeVersion>0</ns1:loadChangeVersion><ns1:noCascade>0</ns1:noCascade><ns1:noGepir>1</ns1:noGepir></ns1:GetItemByGTIN></SOAP-ENV:Body></SOAP-ENV:Envelope>"""
 
     body_core = gtin_list_combiner(GTIN_list=curent_gtin_list)
     full_body = body_prefix + body_core + body_postfix
@@ -76,12 +78,15 @@ def GetTable( gtin_list, attr_list, url=url, auth=auth, batch_size=1):
             curent_gtin_list = gtin_list[:batch_size]
             gtin_list = gtin_list[batch_size:]
 
-            current_attr_df = get_curent_df(curent_gtin_list=curent_gtin_list, attr_list=attr_list, url=url, auth=auth)
+            try:
+                current_attr_df = get_curent_df(curent_gtin_list=curent_gtin_list, attr_list=attr_list, url=url, auth=auth)
+                if len(full_attr_df) < 1:
+                    full_attr_df = current_attr_df.copy()
+                else:
+                    full_attr_df = pd.concat([full_attr_df, current_attr_df], axis = 0)
+            except:
+                full_attr_df = full_attr_df
 
-            if len(full_attr_df) < 1:
-                full_attr_df = current_attr_df.copy()
-            else:
-                full_attr_df = pd.concat([full_attr_df, current_attr_df], axis = 0)
         # добавим остаток от последнего gtin_listб т.к. он не обрабатывается в цикле while
         #curent_gtin_list = gtin_list
         #current_attr_df = get_curent_df(curent_gtin_list=curent_gtin_list, attr_list=attr_list, url=url, auth=auth)
@@ -90,8 +95,27 @@ def GetTable( gtin_list, attr_list, url=url, auth=auth, batch_size=1):
 
     else:
         curent_gtin_list = gtin_list
+
         full_attr_df = get_curent_df(curent_gtin_list=curent_gtin_list, attr_list=attr_list, url=url, auth=auth)
+
+
 
 
 #TODO ВНИМАНИЕ! СЕЙЧАС GETTABLE ВОЗВРАЩАЕТ STRING. Подэтому необходимо добавить дефолтное значение в функцию, чтоб переключала режимы )
     return full_attr_df.iloc[:, :].to_string(index=False, header=False)
+
+def splitter(x, index):
+    try:
+        y = list(x.split(' '))[index]
+        return y
+    except Exception as e:
+        y = 'index error'
+        return y
+
+def splitter_joiner(x):
+    y = ' '.join(list(x.split(' '))[4:])
+    if y == '':
+        y = 'index error'
+    else:
+        y = y
+    return y
