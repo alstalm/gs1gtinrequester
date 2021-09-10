@@ -14,6 +14,7 @@ from requests.auth import HTTPBasicAuth
 from time import perf_counter
 import yaml
 
+
 t1_start = perf_counter() # запуск начала отсчета
 
 ''' ЗАДАИМ ПАРАМЕТРЫ'''

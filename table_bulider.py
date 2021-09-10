@@ -9,6 +9,7 @@ import numpy as np
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
+
 # print('XML_parsed_to_dict = \n', XML_parsed_to_dict)
 
 #TODO Добавить дефолтный параметр trytoreaddescr=True - с которым функция будем работать как сейчас, а если False, то вычитывать только value

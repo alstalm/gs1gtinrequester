@@ -11,8 +11,6 @@ port = params['DB_port']
 password = params['DB_password']
 database = params['DB_database']
 
-
-
 ''' СОЗДАДИМ ОБЪЕКТ ПОДКЛЮЧЕНИЯ и ЗАПРОС В ОБЩЕМ ВИДЕ'''
 @retry(TimeoutError, tries = 5, delay=1, max_delay = 180, backoff = 3 )
 def get_mapping_value(cash, gs1_attrid, mapping_key):
