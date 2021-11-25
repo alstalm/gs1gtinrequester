@@ -39,7 +39,6 @@ Attributes_list = params['Attributes_list']
 ''' соберем авторизацию'''
 auth = HTTPBasicAuth(login, password)
 
-
 # тест соединения с БД
 try:
     cash, test_result = get_mapping_value(cash={}, gs1_attrid='PROD_NAME', mapping_key='')
