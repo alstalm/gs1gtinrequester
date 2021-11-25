@@ -1,7 +1,7 @@
 # Default ignored files
 /shelf/
 /workspace.xml
-/params.yaml
-/сверка выгрузок с ГС1.ipynb
+params.yaml
+сверка выгрузок с ГС1.ipynb
 /__pycache__
 /.ipynb_checkpoints
