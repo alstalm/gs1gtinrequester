@@ -18,4 +18,6 @@ DB_database: 'ntinex'
 output_folder: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/'
 output_file: 'gs1_extraction1.xlsx'
 
+
+
 Attributes_list: ['PROD_COVER_GTIN', 'PROD_DESC', 'PROD_COUNT', 'WEB_90001854', 'WEB_90001722', 'WEB_90001723', 'WEB_90001731', 'WEB_90001709', 'WEB_90000196', 'WEB_90001809', 'WEB_90000626']
