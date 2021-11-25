@@ -12,17 +12,17 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 # print('XML_parsed_to_dict = \n', XML_parsed_to_dict)
 
-#TODO Добавить дефолтный параметр trytoreaddescr=True - с которым функция будем работать как сейчас, а если False, то вычитывать только value
+# TODO Добавить дефолтный параметр trytoreaddescr=True - с которым функция будем работать как сейчас, а если False, то вычитывать только value
 def table_bulider(XML_parsed_to_dict, attr_list):
     full_df = pd.DataFrame()
     # errCode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['Result']['@errCode']
     # if errCode == '0': # Добавлено 21.01.2021
     print('\n================= вошли в table_bulider ================= \n')
-    print('XML_parsed_to_dict\n',XML_parsed_to_dict)
+    print('XML_parsed_to_dict\n', XML_parsed_to_dict)
     try:
         # проверим есть ли второй рекорд. для этого попытаемся найти в нем значение варианта
         variant_from_second_redord_for_try = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][1]['@variant']
-        #TODO здесь надо заменить на вычисление длинны списка вместо попытки распарсить значение @variant для второго рекорда
+        # TODO здесь надо заменить на вычисление длинны списка вместо попытки распарсить значение @variant для второго рекорда
         # что-то типа этого: len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])
 
         if isinstance(variant_from_second_redord_for_try, str):  # просто проверяем что есть второй рекорд у которого есть хоть какое-то значение варинта
@@ -63,7 +63,8 @@ def table_bulider(XML_parsed_to_dict, attr_list):
                     # и начинаем парсить параметры
                     for base_attr_val_record in range(
                             len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'])):
-                        attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][base_attr_val_record][
+                        attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][
+                            base_attr_val_record][
                             '@baseAttrId']
 
                         # print('attrName', attrName)
@@ -74,20 +75,22 @@ def table_bulider(XML_parsed_to_dict, attr_list):
                                     base_attr_val_record]['@descr']
                                 current_df.loc[global_record, attrName] = descr
                             except:
-                                attrValue = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][base_attr_val_record]['@value']
+                                attrValue = \
+                                XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][
+                                    base_attr_val_record]['@value']
                                 current_df.loc[global_record, attrName] = attrValue
                         else:
                             print('tb76: attrName {} не в списке искомых атрибутов')
                     ###############
                     # здесь начинать парсинг веб-атрибутов
                     # вызовем парсер web-атрибутов
-                    print('tb80: прошлись циклом по базовые атрибутам глобального рекорда {}'. format(global_record))
+                    print('tb80: прошлись циклом по базовые атрибутам глобального рекорда {}'.format(global_record))
                     print('tb81: текущее значение датафрейма с глобальными атрибутами: current_df = \n', current_df.to_string())
                     print('вызовем функцию web_attribute_parser')
                     current_df2 = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, web_attr_list=attr_list)
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
                     print('tb85: объединим базовые и web-атрибуты: df= \n')
-                    current_df = pd.concat([current_df,current_df2], axis = 1)
+                    current_df = pd.concat([current_df, current_df2], axis=1)
                     print('tb87: после объединения current_df=\n', current_df.to_string())
                     print('\n')
 
@@ -113,7 +116,7 @@ def table_bulider(XML_parsed_to_dict, attr_list):
 
             current_df.loc[0, 'errorcode'] = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
             try:
-                variant =                      XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@variant']
+                variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@variant']
             except KeyError:
                 variant = np.nan
             current_df.loc[0, 'variant'] = variant
@@ -122,7 +125,6 @@ def table_bulider(XML_parsed_to_dict, attr_list):
             except KeyError:
                 basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['ReqValues']['reqValue']
 
-
             current_df.loc[0, 'basekey'] = basekey
 
             try:
@@ -130,8 +132,6 @@ def table_bulider(XML_parsed_to_dict, attr_list):
             except KeyError:
                 global_record_id = np.nan
             current_df.loc[0, 'idRecord'] = global_record_id
-
-
 
             print('tb132: errCode =', XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode'])
             print('tb133: variant =', variant)
@@ -152,19 +152,21 @@ def table_bulider(XML_parsed_to_dict, attr_list):
             print('переходим к циклу')
             for base_attr_val_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'])):
                 print('tb150: зашли в цикл')
-                attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record]['@baseAttrId']
+                attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
+                    '@baseAttrId']
                 if attrName in attr_list:
                     try:
-                        descr = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record]['@descr']
+                        descr = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
+                            '@descr']
                         current_df.loc[0, attrName] = descr
-                        print('для value {} есть параметр @descr={}'.format(base_attr_val_record,descr))
+                        print('для value {} есть параметр @descr={}'.format(base_attr_val_record, descr))
                     except:
-                        attrValue = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
+                        attrValue = \
+                        XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
                             '@value']
                         current_df.loc[0, attrName] = attrValue
                 else:
                     print('tb162: attrName {} не в списке искомых атрибутов'.format(attrName))
-
 
             #########################
             # здесь так же надо вызвать парсер web-атрибутов
@@ -243,7 +245,6 @@ if __name__ == '__main__':
     df = table_bulider(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=Attributes_list)
     print('\ndf = \n {}'.format(df.to_string()))
     try:
-        df.to_excel('parsed_attributes.xlsx', index=True, sheet_name='sheet_1' )
+        df.to_excel('parsed_attributes.xlsx', index=True, sheet_name='sheet_1')
     except Exception as e:
         print('------------------\nво время записи в файл произошла ошибка:', e)
-
