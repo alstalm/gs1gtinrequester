@@ -107,7 +107,6 @@ def GetTable(gtin_list, attr_list, url=url, auth=auth, batch_size=1):
     df_as_a_string = full_attr_df.to_string(index=False, header=False)
     return df_as_a_string
 
-
 def splitter(x, index):
     try:
         y = list(x.split(' '))[index]

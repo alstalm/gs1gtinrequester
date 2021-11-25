@@ -45,8 +45,6 @@ try:
     cash, test_result = get_mapping_value(cash={}, gs1_attrid='PROD_NAME', mapping_key='')
     print('соединение с БД установлено')
 
-
-
     #TODO #1 переименовать!
     def cal_multi_col(row):
         out = GetTable(gtin_list=[row['GTIN']], attr_list=[row['GS1Attr']], url=url, auth=auth, batch_size=1)

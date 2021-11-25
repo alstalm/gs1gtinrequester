@@ -182,9 +182,6 @@ def table_bulider(XML_parsed_to_dict, attr_list):
         full_df = current_df.copy()
     ##########################################################
 
-
-    ###########################
-    #   df=df.copy().astype({'variant':'int32'}) # поменяем тип столбца variant
     ############################
     # изменим порядок первых двух столбцов
 
@@ -201,7 +198,6 @@ def table_bulider(XML_parsed_to_dict, attr_list):
     full_df = full_df[newcols].copy()
     # cols = cols[-1:] + cols[:-1]
     return full_df
-
 
 if __name__ == '__main__':
     print('start testing table_bulider function \n')

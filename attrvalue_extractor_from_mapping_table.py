@@ -43,9 +43,6 @@ def get_mapping_value(cash, gs1_attrid, mapping_key):
 
         print('attfmap 52: по итогу запроса в базу, текущее значение mapping_value=', mapping_value)
 
-
-
-
     # в этом случае и gs1_attrid и ключ-значение для него есть
     else:
         mapping_value = cash[gs1_attrid][mapping_key]

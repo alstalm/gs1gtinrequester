@@ -16,7 +16,6 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
         common_part = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]
 
     ########################################################################################################################
-    # распасим WEB-атрибуты
     cash = {}
 
     df = pd.DataFrame()

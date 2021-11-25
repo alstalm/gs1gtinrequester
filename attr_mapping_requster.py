@@ -54,7 +54,6 @@ def get_mapping_from_attrtogs1attr(AccountId, gtin,  AttrId,  AttrIsValueOrType)
 
     return GS1AttrId
 
-
 if __name__ == '__main__':
     gtin = '4630079437153'
     AttrId = '16272'
@@ -62,8 +61,6 @@ if __name__ == '__main__':
 
     answer = get_mapping_from_attrtogs1attr(gtin, AttrId, AttrIsValueOrType)
     print('answer is: \" {} \"'.format(answer))
-
-
 
 
 
