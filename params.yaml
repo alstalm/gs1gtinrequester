@@ -1,21 +1,22 @@
-login: '46_______9999'
-password: 'your password'
+login: '4610043559999'
+password: ',Q}*#mFDdpjwH1LXtw'
 url: 'https://srs.gs1ru.org/GS46_Interfaces/GS1RU_Operations'
 
-GTIN_LIST_path: 'D:/CRPT/2021.11_ноябрь/deBug/' 
-GTIN_LIST_file: 'GTIN_list.csv'                     
+GTIN_LIST_path: 'D:/CRPT/2021.11_ноябрь/deBug/'
+GTIN_LIST_file: 'GTIN_list.csv'
+
 
 # в исходном файле д.б. два обязательных столбца "GTIN" и "GS1Attr"
-input_path: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/'     
-input_file:  '7017484176 Выгрузка по списку гтин.xlsx' 
+input_path: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/'
+input_file:  '7017484176 Выгрузка по списку гтин.xlsx'
 
-DB_host: 'DB_host' 
-DB_user: 'DB_user' 
-DB_port:  XXXX 
-DB_password: 'DB_password' 
-DB_database: 'DB_database' 
+DB_host: 'percona01.prod01.nk.crpt.tech'
+DB_user: 'astalmakov'
+DB_port:  6033
+DB_password: 'H3uE3OqK1SaE'
+DB_database: 'ntinex'
 
-output_folder: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/' 
-output_file: 'gs1_extraction1.xlsx' 
+output_folder: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/'
+output_file: 'gs1_extraction1.xlsx'
 
 Attributes_list: ['PROD_COVER_GTIN', 'PROD_DESC', 'PROD_COUNT', 'WEB_90001854', 'WEB_90001722', 'WEB_90001723', 'WEB_90001731', 'WEB_90001709', 'WEB_90000196', 'WEB_90001809', 'WEB_90000626']
