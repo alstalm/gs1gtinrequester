@@ -1,4 +1,3 @@
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
 from func import GetTable
 import pandas as pd
 pd.options.display.max_colwidth = 150
@@ -65,19 +64,6 @@ except Exception as e:
     print('------------------\nво время записи в файл произошла ошибка:', e)
 
 
-
 ''' сделаем отсечку времени окончания'''
 t1_stop = perf_counter() # окночание отсчета времение
 print("Время выполнения программы : {} \n".format(t1_stop-t1_start)) # посчитаем время выполнения скрипта
-
-
-'''
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-'''
