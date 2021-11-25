@@ -28,30 +28,18 @@ def get_mapping_value(cash, gs1_attrid, mapping_key):
             cur.execute(query)
 
             DBresponse = cur.fetchone()
-        print('attfmap 28: DBresponse={}'.format(DBresponse))
-        print('attfmap 28__: DBresponse[0]={}'.format(DBresponse[0]))
 
         if DBresponse == None or DBresponse[0] == None: # None получим если нет в принципе такой записи с указанным GS1AttrId, а 'NULL' если GS1AttrId но для него нет valueMap
-            print('attfmap 31: в базе для gs1_attrid = {} и mapping_key={} ничего не найдено, поэтому .. ->'.format(gs1_attrid, mapping_key))
             mapping_value = None # т.к. маппинга нет, тогда функция вернет attrId из эксемеля (в mapping_key подается attrId)
 
         else:
             mapping_value = DBresponse[0]
-            print('attfmap 36: в базе для gs1_attrid = {} и mapping_key={} в БД есть маппинг'.format(gs1_attrid, mapping_key))
             # поскольку в базе что-то есть, запишем в кэш полученное значение, но сперва проверим, есть ли там хотя бы атрибут
             if cash.get(gs1_attrid, None) == None:  # если нет еще
-                print('attfmap 39: запрашиваемого gs1_attrid= {} еще нет в кэше'.format(gs1_attrid, mapping_key))
-
                 cash[gs1_attrid] = {mapping_key: mapping_value}
-                print('attfmap 42: обновим кэш, теперь cash=', cash)
 
-                # если есть GS1AttrId, но нет для него ключа, добавляем ключ и записываем для него згначение
             else:
-                print('attfmap 46: для gs1_attrid= {} запрашиваемого по ключу mapping_key={} еще нет в кэше'.format(gs1_attrid, mapping_key))
                 cash[gs1_attrid][mapping_key] = mapping_value
-                print('attfmap 48: бновим кэш, теперь cash=', cash)
-
-
 
         print('attfmap 52: по итогу запроса в базу, текущее значение mapping_value=', mapping_value)
 
@@ -60,12 +48,10 @@ def get_mapping_value(cash, gs1_attrid, mapping_key):
 
     # в этом случае и gs1_attrid и ключ-значение для него есть
     else:
-        print('attfmap 59: запрашиваемое по ключу gs1_attrid= {} и mapping_key={} УЖЕ ЕСТЬ в кэше'.format(gs1_attrid, mapping_key))
         mapping_value = cash[gs1_attrid][mapping_key]
 
     if mapping_value == None: # если в базе нет маппинга
         mapping_value = mapping_key
-        print('attfmap 64: на выход функции отдаем value для AttrId. т.е. mapping_value=', mapping_value)
     else:
         print('attfmap 66: на выход функции отдаем mapping_value=', mapping_value)
 
