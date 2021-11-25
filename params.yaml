@@ -1,22 +1,22 @@
-login: '4610043559999'
-password: ',Q}*#mFDdpjwH1LXtw'
+login: '46_______9999'
+password: 'your password'
 url: 'https://srs.gs1ru.org/GS46_Interfaces/GS1RU_Operations'
 
-GTIN_LIST_path: 'D:/CRPT/2021.11_ноябрь/deBug/' # в sequence_parser не используется
-GTIN_LIST_file: 'GTIN_list.csv'                     # в sequence_parser не используется
+GTIN_LIST_path: 'D:/CRPT/2021.11_ноябрь/deBug/' 
+GTIN_LIST_file: 'GTIN_list.csv'                     
 
 # в исходном файле д.б. два обязательных столбца "GTIN" и "GS1Attr"
-input_path: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/'      #'D:/CRPT/2021.07_июль/расхождения/'
-input_file:  '7017484176 Выгрузка по списку гтин.xlsx' #'from_DB_p1 (..-20000).xlsx' #'from_DB_TOTAL.xlsx' #'test.xlsx' #'concatinated.xlsx'
+input_path: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/'     
+input_file:  '7017484176 Выгрузка по списку гтин.xlsx' 
 
-DB_host: 'percona01.prod01.nk.crpt.tech' #'percona01.stable.nk.crpt.tech'
-DB_user: 'astalmakov' #'user'
-DB_port:  6033 #6033
-DB_password: 'H3uE3OqK1SaE' #'7tIgfhZG'
-DB_database: 'ntinex' #'ntinex'
+DB_host: 'DB_host' 
+DB_user: 'DB_user' 
+DB_port:  XXXX 
+DB_password: 'DB_password' 
+DB_database: 'DB_database' 
 
-output_folder: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/' #'D:/CRPT/2021.07_июль/расхождения/'
-output_file: 'gs1_extraction1.xlsx' #'GS1_extraction_TOTAL.xlsx' #'test_out.xlsx'
+output_folder: 'D:/CRPT/2021.09_сентябрь/выгрузка для Буровой/' 
+output_file: 'gs1_extraction1.xlsx' 
 
 Attributes_list: ['PROD_COVER_GTIN', 'PROD_DESC', 'PROD_COUNT', 'WEB_90001854', 'WEB_90001722', 'WEB_90001723', 'WEB_90001731', 'WEB_90001709', 'WEB_90000196', 'WEB_90001809', 'WEB_90000626']
 
