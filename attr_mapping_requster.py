@@ -11,7 +11,6 @@ port = params['DB_port']
 password = params['DB_password']
 database = params['DB_database']
 
-
 def get_mapping_from_attrtogs1attr(AccountId, gtin,  AttrId,  AttrIsValueOrType):
 
 
@@ -52,10 +51,6 @@ def get_mapping_from_attrtogs1attr(AccountId, gtin,  AttrId,  AttrIsValueOrType)
         GS1AttrId = DBresponse[0]
     else:
         print('atmr 30: в маппинге экспорта GS1AttrId для gtin={} AttrId={} AttrIsValueOrType={} не найдено'.format(gtin, AttrId, AttrIsValueOrType))
-
-
-
-
 
     return GS1AttrId
 
