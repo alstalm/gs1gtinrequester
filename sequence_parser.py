@@ -41,7 +41,6 @@ auth = HTTPBasicAuth(login, password)
 
 
 # тест соединения с БД
-print('DB connection test')
 try:
     cash, test_result = get_mapping_value(cash={}, gs1_attrid='PROD_NAME', mapping_key='')
     print('соединение с БД установлено')

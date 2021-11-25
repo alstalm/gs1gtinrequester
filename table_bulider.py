@@ -17,8 +17,8 @@ def table_bulider(XML_parsed_to_dict, attr_list):
     full_df = pd.DataFrame()
     # errCode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['Result']['@errCode']
     # if errCode == '0': # Добавлено 21.01.2021
-    print('\n================= вошли в table_bulider ================= \n')
-    print('XML_parsed_to_dict\n', XML_parsed_to_dict)
+    #print('\n================= вошли в table_bulider ================= \n')
+    #print('XML_parsed_to_dict\n', XML_parsed_to_dict)
     try:
         # проверим есть ли второй рекорд. для этого попытаемся найти в нем значение варианта
         variant_from_second_redord_for_try = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][1]['@variant']
@@ -26,7 +26,7 @@ def table_bulider(XML_parsed_to_dict, attr_list):
         # что-то типа этого: len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])
 
         if isinstance(variant_from_second_redord_for_try, str):  # просто проверяем что есть второй рекорд у которого есть хоть какое-то значение варинта
-            print('tb25: рекордов больше чем 1. успешно прошли try. идем в цикл парсинга нескольких записей \n')
+            #print('tb25: рекордов больше чем 1. успешно прошли try. идем в цикл парсинга нескольких записей \n')
             # если на входе получили несколько рекордов то для каждого рекорда
             for global_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])):
                 # если датафрейм не пустой, то объединим по вериткали
@@ -49,7 +49,7 @@ def table_bulider(XML_parsed_to_dict, attr_list):
 
                 # иначе, (если errorCode = 0)
                 else:
-                    print('tb48: для глобального рекорда {} errorCode=0'.format(global_record))
+                    #print('tb48: для глобального рекорда {} errorCode=0'.format(global_record))
                     # записываем текущее значение errCode
                     current_df.loc[global_record, 'errorcode'] = errorcode
                     variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['@variant']
@@ -58,7 +58,7 @@ def table_bulider(XML_parsed_to_dict, attr_list):
                     current_df.loc[global_record, 'basekey'] = basekey
                     global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['@idRecord']
                     current_df.loc[global_record, 'idRecord'] = global_record_id
-                    print('tb57: записали основные параметры глобального рекорда и сохранили в датафрейм. текущий df = \n', current_df.to_string())
+                    #print('tb57: записали основные параметры глобального рекорда и сохранили в датафрейм. текущий df = \n', current_df.to_string())
 
                     # и начинаем парсить параметры
                     for base_attr_val_record in range(
@@ -84,15 +84,15 @@ def table_bulider(XML_parsed_to_dict, attr_list):
                     ###############
                     # здесь начинать парсинг веб-атрибутов
                     # вызовем парсер web-атрибутов
-                    print('tb80: прошлись циклом по базовые атрибутам глобального рекорда {}'.format(global_record))
-                    print('tb81: текущее значение датафрейма с глобальными атрибутами: current_df = \n', current_df.to_string())
-                    print('вызовем функцию web_attribute_parser')
+                    #print('tb80: прошлись циклом по базовые атрибутам глобального рекорда {}'.format(global_record))
+                    #print('tb81: текущее значение датафрейма с глобальными атрибутами: current_df = \n', current_df.to_string())
+                    #print('вызовем функцию web_attribute_parser')
                     current_df2 = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, web_attr_list=attr_list)
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
                     print('tb85: объединим базовые и web-атрибуты: df= \n')
                     current_df = pd.concat([current_df, current_df2], axis=1)
-                    print('tb87: после объединения current_df=\n', current_df.to_string())
-                    print('\n')
+                    #print('tb87: после объединения current_df=\n', current_df.to_string())
+                    #print('\n')
 
                 if len(full_df) < 1:
                     full_df = current_df.copy()
@@ -102,17 +102,17 @@ def table_bulider(XML_parsed_to_dict, attr_list):
 
     except KeyError:
         # если на входе только один рекорд
-        print('tb98: второго рекорда не существует')
+        #print('tb98: второго рекорда не существует')
 
         # если errCode не равен 0, то
         errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
-        print('tb102: errcode =', errcode)
+        #print('tb102: errcode =', errcode)
 
         current_df = pd.DataFrame()
 
         if int(errcode) != 0:
             #  просто записываем значение errcode и variant
-            print('tb108: в текущем глобалрекорде errcode !=0')
+            #print('tb108: в текущем глобалрекорде errcode !=0')
 
             current_df.loc[0, 'errorcode'] = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
             try:
@@ -133,8 +133,8 @@ def table_bulider(XML_parsed_to_dict, attr_list):
                 global_record_id = np.nan
             current_df.loc[0, 'idRecord'] = global_record_id
 
-            print('tb132: errCode =', XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode'])
-            print('tb133: variant =', variant)
+            #print('tb132: errCode =', XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode'])
+            #print('tb133: variant =', variant)
 
         # иначе
         else:
@@ -143,15 +143,15 @@ def table_bulider(XML_parsed_to_dict, attr_list):
             variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@variant']
             current_df.loc[0, 'variant'] = variant
             basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['baseKey']
-            print('tb142:: baseKey =', basekey)
+            #print('tb142:: baseKey =', basekey)
             current_df.loc[0, 'basekey'] = basekey
             global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@idRecord']
             current_df.loc[0, 'idRecord'] = global_record_id
 
             # и начинаем парсить параметры
-            print('переходим к циклу')
+            #print('переходим к циклу')
             for base_attr_val_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'])):
-                print('tb150: зашли в цикл')
+                #print('tb150: зашли в цикл')
                 attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
                     '@baseAttrId']
                 if attrName in attr_list:
@@ -172,18 +172,16 @@ def table_bulider(XML_parsed_to_dict, attr_list):
             # здесь так же надо вызвать парсер web-атрибутов
             current_df2 = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=None, web_attr_list=attr_list)
             # сконкатинируем датафреймы по горизонтали axis=1
-            print('tb169: а сейчас посмотрим почему не конкатинируется датафреймы..')
-            print('tb170: current_df2: \n', current_df2.to_string())
-            print('tb171: current_df: \n', current_df.to_string())
+            #print('tb169: а сейчас посмотрим почему не конкатинируется датафреймы..')
+            #print('tb170: current_df2: \n', current_df2.to_string())
+            #print('tb171: current_df: \n', current_df.to_string())
             current_df = pd.concat([current_df, current_df2], axis=1)
-            print('tb173: после конкатинации \n', current_df.to_string())
-            print('\n')
+            #print('tb173: после конкатинации \n', current_df.to_string())
+            #print('\n')
 
         full_df = current_df.copy()
     ##########################################################
 
-    # except Exception as e:
-    #    print('Exception =', e)
 
     ###########################
     #   df=df.copy().astype({'variant':'int32'}) # поменяем тип столбца variant

@@ -19,7 +19,7 @@ auth = HTTPBasicAuth(login, password)
 def gtin_list_combiner(GTIN_list):
     row_set = ''
     for gtin in GTIN_list:
-        # print('row_set before iteration:', row_set)
+
         print('func22: gtin_type = ', type(gtin))
 
         row = '<ns1:GTIN>' + str(gtin) + '</ns1:GTIN>'
