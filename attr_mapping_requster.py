@@ -62,5 +62,3 @@ if __name__ == '__main__':
     answer = get_mapping_from_attrtogs1attr(gtin, AttrId, AttrIsValueOrType)
     print('answer is: \" {} \"'.format(answer))
 
-
-

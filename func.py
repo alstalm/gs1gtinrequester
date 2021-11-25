@@ -28,7 +28,6 @@ def gtin_list_combiner(GTIN_list):
         # print('')
     return row_set
 
-
 # TODO ALt+shift+L - beutify
 @retry(TimeoutError, tries=5, delay=1, max_delay=180, backoff=3)
 def get_curent_df(curent_gtin_list, attr_list, url, auth):

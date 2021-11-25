@@ -45,6 +45,7 @@ GTIN_list = list(map(str, GTIN_list))
 ''' соберем путь к файлу результата выгрузки '''
 full_output_path = output_folder + output_file
 
+
 ''' сделаем запрос в ГС1'''
 #GTIN_list = ['4601075342390', '4601075342420']
 df = GetTable(url=url, auth=auth, gtin_list=GTIN_list, attr_list=Attributes_list, batch_size=1)
