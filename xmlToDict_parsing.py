@@ -4,7 +4,8 @@ import requests
 import yaml
 from requests.auth import HTTPBasicAuth
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from web_attributes_parser import web_attribute_parser
+from webAttributes_parsing import web_attribute_parser
+from TNVED_parsing import TNVED_codes_parser
 import numpy as np
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -13,12 +14,16 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 # print('XML_parsed_to_dict = \n', XML_parsed_to_dict)
 
 # TODO Добавить дефолтный параметр trytoreaddescr=True - с которым функция будем работать как сейчас, а если False, то вычитывать только value
-def table_bulider(XML_parsed_to_dict, attr_list):
+def table_from_dict_builder(XML_parsed_to_dict, attr_list):
+    '''
+    Данная функция принимает на вход из функции get_curent_df словарь и
+    1. Сама парсит базовые атрибуты
+    2. для ЦУИ атрибутов вызывает функцию web_attribute_parser и формирует датафрейм из базовых и WEB-атрибутов.
+
+    '''
     full_df = pd.DataFrame()
-    # errCode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['Result']['@errCode']
-    # if errCode == '0': # Добавлено 21.01.2021
-    #print('\n================= вошли в table_bulider ================= \n')
-    #print('XML_parsed_to_dict\n', XML_parsed_to_dict)
+
+
     try:
         # проверим есть ли второй рекорд. для этого попытаемся найти в нем значение варианта
         variant_from_second_redord_for_try = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][1]['@variant']
@@ -64,8 +69,7 @@ def table_bulider(XML_parsed_to_dict, attr_list):
                     for base_attr_val_record in range(
                             len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'])):
                         attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][
-                            base_attr_val_record][
-                            '@baseAttrId']
+                            base_attr_val_record]['@baseAttrId']
 
                         # print('attrName', attrName)
                         # print('attrValue', attrValue)
@@ -82,15 +86,14 @@ def table_bulider(XML_parsed_to_dict, attr_list):
                         else:
                             print('tb76: attrName {} не в списке искомых атрибутов')
                     ###############
-                    # здесь начинать парсинг веб-атрибутов
-                    # вызовем парсер web-атрибутов
-                    #print('tb80: прошлись циклом по базовые атрибутам глобального рекорда {}'.format(global_record))
-                    #print('tb81: текущее значение датафрейма с глобальными атрибутами: current_df = \n', current_df.to_string())
-                    #print('вызовем функцию web_attribute_parser')
-                    current_df2 = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, web_attr_list=attr_list)
+                    # распарсим веб-атрибуты
+                    web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, web_attr_list=attr_list)
+
+                    # распарсим TNVED
+                    TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, tnved_attr_list=attr_list)
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
                     print('tb85: объединим базовые и web-атрибуты: df= \n')
-                    current_df = pd.concat([current_df, current_df2], axis=1)
+                    current_df = pd.concat([current_df, web_attributes_df, TNVED_codes_df], axis=1)
                     #print('tb87: после объединения current_df=\n', current_df.to_string())
                     #print('\n')
 
@@ -170,12 +173,16 @@ def table_bulider(XML_parsed_to_dict, attr_list):
 
             #########################
             # здесь так же надо вызвать парсер web-атрибутов
-            current_df2 = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=None, web_attr_list=attr_list)
+            web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=None, web_attr_list=attr_list)
+
+            # распарсим TNVED
+            TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, tnved_attr_list=attr_list)
+
             # сконкатинируем датафреймы по горизонтали axis=1
             #print('tb169: а сейчас посмотрим почему не конкатинируется датафреймы..')
-            #print('tb170: current_df2: \n', current_df2.to_string())
+            #print('tb170: web_attributes_df: \n', web_attributes_df.to_string())
             #print('tb171: current_df: \n', current_df.to_string())
-            current_df = pd.concat([current_df, current_df2], axis=1)
+            current_df = pd.concat([current_df, web_attributes_df, TNVED_codes_df], axis=1)
             #print('tb173: после конкатинации \n', current_df.to_string())
             #print('\n')
 
@@ -235,7 +242,7 @@ if __name__ == '__main__':
     answer = resp.content
     XML_parsed_to_dict = xmltodict.parse(answer)
 
-    df = table_bulider(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=Attributes_list)
+    df = table_from_dict_builder(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=Attributes_list)
     print('\ndf = \n {}'.format(df.to_string()))
     try:
         df.to_excel('parsed_attributes.xlsx', index=True, sheet_name='sheet_1')

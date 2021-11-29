@@ -13,7 +13,7 @@ database = params['DB_database']
 
 ''' СОЗДАДИМ ОБЪЕКТ ПОДКЛЮЧЕНИЯ и ЗАПРОС В ОБЩЕМ ВИДЕ'''
 @retry(TimeoutError, tries = 5, delay=1, max_delay = 180, backoff = 3 )
-def get_mapping_value(cash, gs1_attrid, mapping_key):
+def get_mapping_value(cash: object, gs1_attrid: object, mapping_key: object) -> object:
     # если нет или GS1AttrId или одного из его ключей, то идем в базу
 
     if cash.get(gs1_attrid, None) == None or cash.get(gs1_attrid).get(mapping_key, None) == None:

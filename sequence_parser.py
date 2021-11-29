@@ -1,10 +1,10 @@
-from func import GetTable
-from func import splitter
-from func import splitter_joiner
+from df_creating import get_total_df
+from df_creating import splitter
+from df_creating import splitter_joiner
 import pandas as pd
 pd.options.display.max_colwidth = 150
 import requests
-from attrvalue_extractor_from_mapping_table import get_mapping_value
+from attrvalue_from_valueMap_extracting import get_mapping_value
 import datetime
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 # ОТКЛЮЧАЕТ ВОРНИНГИ НО ВОЗМОЖНО ЗАМЕДЛЯЕТ
@@ -47,7 +47,7 @@ try:
 
     #TODO #1 переименовать!
     def cal_multi_col(row):
-        out = GetTable(gtin_list=[row['GTIN']], attr_list=[row['GS1Attr']], url=url, auth=auth, batch_size=1)
+        out = get_total_df(gtin_list=[row['GTIN']], attr_list=[row['GS1Attr']], url=url, auth=auth, batch_size=1)
         return [out]
 
      #################

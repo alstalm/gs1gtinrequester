@@ -6,9 +6,18 @@ from pprint import pprint
 from requests.auth import HTTPBasicAuth
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-from attrvalue_extractor_from_mapping_table import get_mapping_value
+from attrvalue_from_valueMap_extracting import get_mapping_value
 
 def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
+    '''
+    Данная функция вызывается из table_from_dict_builder и парсит из переданного словаря WEB - атрибуты.
+    Если для WEB атрибута находит ключ (без descr) то вызывает get_mapping_value для получения ключа из базы по ValueMap.
+    Если ключа в базе не находится то забирает value как оно указано в XML
+    :param XML_parsed_to_dict:
+    :param web_attr_list:
+    :param global_record:
+    :return:
+    '''
     if global_record is None:
         common_part = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']
         global_record = 0

@@ -11,7 +11,16 @@ port = params['DB_port']
 password = params['DB_password']
 database = params['DB_database']
 
-def get_mapping_from_attrtogs1attr(AccountId, gtin,  AttrId,  AttrIsValueOrType):
+def get_mapping_from_attrToGS1Attr(AccountId, gtin, AttrId, AttrIsValueOrType):
+    '''
+    Кажется эта функция Не используется
+    Данная функция делает SQL запрос в БД и по AttrIsValueOrType и AttrId возвращает GS1AttrId
+    :param AccountId:
+    :param gtin:
+    :param AttrId:
+    :param AttrIsValueOrType:
+    :return:
+    '''
 
 
     con = pymysql.connect(host=host, user=user, port=port, password=password, database=database)
@@ -59,6 +68,6 @@ if __name__ == '__main__':
     AttrId = '16272'
     AttrIsValueOrType = 'value'
 
-    answer = get_mapping_from_attrtogs1attr(gtin, AttrId, AttrIsValueOrType)
+    answer = get_mapping_from_attrToGS1Attr(gtin, AttrId, AttrIsValueOrType)
     print('answer is: \" {} \"'.format(answer))
 
