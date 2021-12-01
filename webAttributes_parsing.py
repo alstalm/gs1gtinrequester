@@ -51,6 +51,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
                                  #       print('wap46: текущее значение df= \n {}\n'.format(df))
                                  #   except KeyError:
                                     web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue']['@value']
+                                    print('wap154: вызовем get_mapping_value')
                                     cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                     df.loc[global_record, web_attr_id] = mapping_value
                                     #print('wap49: текущее значение df= \n {}\n'.format(df))
@@ -70,6 +71,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
 
                                         #except KeyError:
                                         web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue'][MultValue_N]['@value']
+                                        print('wap74: вызовем get_mapping_value')
                                         cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                         multiattrlist.append(mapping_value)
 
@@ -94,6 +96,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
                             #except KeyError:
                             #    print('wap85:  !!! в web_attr_id={} параметра @descr НЕТ '.format(web_attr_id))
                             web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['@value']
+                            print('wap99: вызовем get_mapping_value')
                             cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                             df.loc[global_record, web_attr_id] = mapping_value
 
@@ -101,7 +104,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
                             #except:
                             #    print('wap92: в infotype_record N={} в /AttributeValues в записи  value N={} для web_attr_id {} что-то НЕОЖИДАННОЕ'.format(infotype_record, value_number, web_attr_id))
                     except : #
-                        print('wap97: в infotype_record N={} в /AttributeValues в записи  value N={} что-то НЕОЖИДАННОЕ'.format(infotype_record, value_number))
+                        print('wap107: в infotype_record N={} в /AttributeValues в записи  value N={} что-то НЕОЖИДАННОЕ'.format(infotype_record, value_number))
 
             if isinstance(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'], dict): # если только одна запись value в AttributeValues
                 #print('wap100: в infotype_record N={} в AttributeValues/value только одна запись value.'.format(infotype_record))
@@ -124,9 +127,10 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
                             #except KeyError:
 
                             if web_attr_id not in web_attr_list:
-                                print('wap120: web_attr_id {} НЕ в web_attr_list'.format(web_attr_id))
+                                print('wap127: web_attr_id {} НЕ в web_attr_list'.format(web_attr_id))
                             else:
                                 web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue']['@value']
+                                print('wap133: вызовем get_mapping_value')
                                 cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                 df.loc[global_record, web_attr_id] = mapping_value
                                 #print('wap125: текущее значение df= \n {}\n'.format(df))
@@ -149,6 +153,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
 
                                 #except KeyError:
                                 web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue'][MultValue_N]['@value']
+                                print('wap156: вызовем get_mapping_value')
                                 cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                 if web_attr_id not in web_attr_list:
                                     continue
@@ -173,6 +178,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
 
                     #except KeyError:
                     web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@value']
+                    print('wap181: вызовем get_mapping_value')
                     cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                     if web_attr_id not in web_attr_list:
                         print('wap170: web_attr_id {} не в web_attr_list'.format(web_attr_id))

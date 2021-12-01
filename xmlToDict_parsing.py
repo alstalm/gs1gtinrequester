@@ -37,7 +37,7 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
                 # если датафрейм не пустой, то объединим по вериткали
 
                 current_df = pd.DataFrame()
-                print('tb31: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
+                print('xtdp40: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
                 # если errCode не равен 0, то
                 errorcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
                 if int(errorcode) != 0:
@@ -49,7 +49,7 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
                     current_df.loc[global_record, 'basekey'] = basekey
                     global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['@idRecord']
                     current_df.loc[global_record, 'idRecord'] = global_record_id
-                    print('tb43: текущий датафрейм выглядит так: \n', current_df.to_string())
+                    print('xtdp52: текущий датафрейм выглядит так: \n', current_df.to_string())
                     print('=' * 40)
 
                 # иначе, (если errorCode = 0)
@@ -84,15 +84,16 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
                                     base_attr_val_record]['@value']
                                 current_df.loc[global_record, attrName] = attrValue
                         else:
-                            print('tb76: attrName {} не в списке искомых атрибутов')
+                            print('xtdp87: attrName {} не в списке искомых атрибутов')
                     ###############
                     # распарсим веб-атрибуты
                     web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, web_attr_list=attr_list)
 
                     # распарсим TNVED
+                    print('xtdp93: парсим ТНВЭД ')
                     TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, tnved_attr_list=attr_list)
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
-                    print('tb85: объединим базовые и web-атрибуты: df= \n')
+                    print('xtdp95: объединим базовые и web-атрибуты: df= \n')
                     current_df = pd.concat([current_df, web_attributes_df, TNVED_codes_df], axis=1)
                     #print('tb87: после объединения current_df=\n', current_df.to_string())
                     #print('\n')
@@ -146,7 +147,6 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
             variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@variant']
             current_df.loc[0, 'variant'] = variant
             basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['baseKey']
-            #print('tb142:: baseKey =', basekey)
             current_df.loc[0, 'basekey'] = basekey
             global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@idRecord']
             current_df.loc[0, 'idRecord'] = global_record_id
@@ -169,22 +169,15 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
                             '@value']
                         current_df.loc[0, attrName] = attrValue
                 else:
-                    print('tb162: attrName {} не в списке искомых атрибутов'.format(attrName))
+                    print('xtdp172: attrName {} не в списке искомых атрибутов'.format(attrName))
 
             #########################
             # здесь так же надо вызвать парсер web-атрибутов
             web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=None, web_attr_list=attr_list)
+            print('xtdp178: парсим ТНВЭД ')
+            TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=None, tnved_attr_list=attr_list)
 
-            # распарсим TNVED
-            TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, tnved_attr_list=attr_list)
-
-            # сконкатинируем датафреймы по горизонтали axis=1
-            #print('tb169: а сейчас посмотрим почему не конкатинируется датафреймы..')
-            #print('tb170: web_attributes_df: \n', web_attributes_df.to_string())
-            #print('tb171: current_df: \n', current_df.to_string())
             current_df = pd.concat([current_df, web_attributes_df, TNVED_codes_df], axis=1)
-            #print('tb173: после конкатинации \n', current_df.to_string())
-            #print('\n')
 
         full_df = current_df.copy()
     ##########################################################
