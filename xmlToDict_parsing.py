@@ -4,8 +4,10 @@ import requests
 import yaml
 from requests.auth import HTTPBasicAuth
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from baseAttribute_parsing import base_attribute_parser
 from webAttributes_parsing import web_attribute_parser
 from TNVED_parsing import TNVED_codes_parser
+from generalParameters_parsing import general_parameter_parser
 import numpy as np
 
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
@@ -22,166 +24,65 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
 
     '''
     full_df = pd.DataFrame()
-
-
+    # в случае, если в XML только один рекорд
     try:
-        # проверим есть ли второй рекорд. для этого попытаемся найти в нем значение варианта
         variant_from_second_redord_for_try = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][1]['@variant']
         # TODO здесь надо заменить на вычисление длинны списка вместо попытки распарсить значение @variant для второго рекорда
         # что-то типа этого: len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])
 
         if isinstance(variant_from_second_redord_for_try, str):  # просто проверяем что есть второй рекорд у которого есть хоть какое-то значение варинта
-            #print('tb25: рекордов больше чем 1. успешно прошли try. идем в цикл парсинга нескольких записей \n')
+            # print('tb25: рекордов больше чем 1. успешно прошли try. идем в цикл парсинга нескольких записей \n')
             # если на входе получили несколько рекордов то для каждого рекорда
             for global_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])):
-                # если датафрейм не пустой, то объединим по вериткали
 
-                current_df = pd.DataFrame()
                 print('xtdp40: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
-                # если errCode не равен 0, то
-                errorcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
-                if int(errorcode) != 0:
+
+                errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
+
+                if int(errcode) != 0:
                     # просто записываем значение errcode и variant и переходим к следующему рекорду
-                    current_df.loc[global_record, 'errorcode'] = errorcode
-                    variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['@variant']
-                    current_df.loc[global_record, 'variant'] = variant
-                    basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['baseKey']
-                    current_df.loc[global_record, 'basekey'] = basekey
-                    global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['@idRecord']
-                    current_df.loc[global_record, 'idRecord'] = global_record_id
-                    print('xtdp52: текущий датафрейм выглядит так: \n', current_df.to_string())
-                    print('=' * 40)
+                    current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=global_record)
 
                 # иначе, (если errorCode = 0)
                 else:
-                    #print('tb48: для глобального рекорда {} errorCode=0'.format(global_record))
-                    # записываем текущее значение errCode
-                    current_df.loc[global_record, 'errorcode'] = errorcode
-                    variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['@variant']
-                    current_df.loc[global_record, 'variant'] = variant
-                    basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['baseKey']
-                    current_df.loc[global_record, 'basekey'] = basekey
-                    global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['@idRecord']
-                    current_df.loc[global_record, 'idRecord'] = global_record_id
-                    #print('tb57: записали основные параметры глобального рекорда и сохранили в датафрейм. текущий df = \n', current_df.to_string())
 
-                    # и начинаем парсить параметры
-                    for base_attr_val_record in range(
-                            len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'])):
-                        attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][
-                            base_attr_val_record]['@baseAttrId']
-
-                        # print('attrName', attrName)
-                        # print('attrValue', attrValue)
-                        if attrName in attr_list:
-                            try:
-                                descr = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][
-                                    base_attr_val_record]['@descr']
-                                current_df.loc[global_record, attrName] = descr
-                            except:
-                                attrValue = \
-                                XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['BaseAttributeValues']['value'][
-                                    base_attr_val_record]['@value']
-                                current_df.loc[global_record, attrName] = attrValue
-                        else:
-                            print('xtdp87: attrName {} не в списке искомых атрибутов')
-                    ###############
-                    # распарсим веб-атрибуты
+                    # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
+                    current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=global_record)
+                    base_attribute_df = base_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, basic_attr_list=attr_list, global_record=global_record)
                     web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, web_attr_list=attr_list)
-
-                    # распарсим TNVED
-                    print('xtdp93: парсим ТНВЭД ')
                     TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, tnved_attr_list=attr_list)
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
                     print('xtdp95: объединим базовые и web-атрибуты: df= \n')
-                    current_df = pd.concat([current_df, web_attributes_df, TNVED_codes_df], axis=1)
-                    #print('tb87: после объединения current_df=\n', current_df.to_string())
-                    #print('\n')
+                    current_df = pd.concat([current_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
+                    # print('tb87: после объединения current_df=\n', current_df.to_string())
+                    # print('\n')
 
                 if len(full_df) < 1:
                     full_df = current_df.copy()
                 else:
                     full_df = pd.concat([full_df, current_df], axis=0)
 
-
+    # в случае, если в XML только один рекорд
     except KeyError:
-        # если на входе только один рекорд
-        #print('tb98: второго рекорда не существует')
 
-        # если errCode не равен 0, то
         errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
-        #print('tb102: errcode =', errcode)
-
-        current_df = pd.DataFrame()
 
         if int(errcode) != 0:
             #  просто записываем значение errcode и variant
-            #print('tb108: в текущем глобалрекорде errcode !=0')
 
-            current_df.loc[0, 'errorcode'] = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
-            try:
-                variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@variant']
-            except KeyError:
-                variant = np.nan
-            current_df.loc[0, 'variant'] = variant
-            try:
-                basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['baseKey']
-            except KeyError:
-                basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['ReqValues']['reqValue']
+            current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=int(errcode), global_record=None)
 
-            current_df.loc[0, 'basekey'] = basekey
-
-            try:
-                global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@idRecord']
-            except KeyError:
-                global_record_id = np.nan
-            current_df.loc[0, 'idRecord'] = global_record_id
-
-            #print('tb132: errCode =', XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode'])
-            #print('tb133: variant =', variant)
-
-        # иначе
         else:
-            # записываем значение errcode и variant
-            current_df.loc[0, 'errorcode'] = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
-            variant = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@variant']
-            current_df.loc[0, 'variant'] = variant
-            basekey = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['baseKey']
-            current_df.loc[0, 'basekey'] = basekey
-            global_record_id = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['@idRecord']
-            current_df.loc[0, 'idRecord'] = global_record_id
+            # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
+            current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=None)
+            base_attribute_df = base_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, basic_attr_list=attr_list, global_record=None)
+            web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, web_attr_list=attr_list, global_record=None)
+            TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, tnved_attr_list=attr_list, global_record=None)
 
-            # и начинаем парсить параметры
-            #print('переходим к циклу')
-            for base_attr_val_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'])):
-                #print('tb150: зашли в цикл')
-                attrName = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
-                    '@baseAttrId']
-                if attrName in attr_list:
-                    try:
-                        descr = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
-                            '@descr']
-                        current_df.loc[0, attrName] = descr
-                        print('для value {} есть параметр @descr={}'.format(base_attr_val_record, descr))
-                    except:
-                        attrValue = \
-                        XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['BaseAttributeValues']['value'][base_attr_val_record][
-                            '@value']
-                        current_df.loc[0, attrName] = attrValue
-                else:
-                    print('xtdp172: attrName {} не в списке искомых атрибутов'.format(attrName))
-
-            #########################
-            # здесь так же надо вызвать парсер web-атрибутов
-            web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=None, web_attr_list=attr_list)
-            print('xtdp178: парсим ТНВЭД ')
-            TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=None, tnved_attr_list=attr_list)
-
-            current_df = pd.concat([current_df, web_attributes_df, TNVED_codes_df], axis=1)
+            current_df = pd.concat([current_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
 
         full_df = current_df.copy()
-    ##########################################################
-    ############################
+    ##########################################################    ############################
     # изменим порядок первых двух столбцов
 
     cols = full_df.columns.tolist()
@@ -197,6 +98,7 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
     full_df = full_df[newcols].copy()
     # cols = cols[-1:] + cols[:-1]
     return full_df
+
 
 if __name__ == '__main__':
     print('start testing table_bulider function \n')

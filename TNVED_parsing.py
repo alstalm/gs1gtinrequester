@@ -2,6 +2,7 @@ import pandas as pd
 
 
 def TNVED_codes_parser(XML_parsed_to_dict, tnved_attr_list, global_record=None):
+    print('\n++++++++++++++++ ПАРСИНГ ТНВЭДов ++++++++++++++++\n')
     '''
     Данная функция вызывается из xmlToDict_parsing.table_from_dict_builder и парсит атрибуты только в рекордах узла SubDataObjectRecords с dataObjectId = "PROD_CLASS"
 
@@ -24,7 +25,7 @@ def TNVED_codes_parser(XML_parsed_to_dict, tnved_attr_list, global_record=None):
 
     df = pd.DataFrame()
 
-    print('\n++++++++++++++++ ПАРСИНГ ТНВЭДов ++++++++++++++++\n')
+
 
     if isinstance(common_part['SubDataObjectRecords']['record'], list):
 
