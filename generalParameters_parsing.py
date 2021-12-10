@@ -17,28 +17,29 @@ def general_parameter_parser(XML_parsed_to_dict, errcode, global_record=None):
     if global_record is None:
         common_part = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']
         global_record = 0
-        print('gpp20:  globalrecord = {}, common_part = {}'.format(global_record,common_part))
     else:
         common_part = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]
         print('gpp23:  globalrecord = {}, common_part = {}'.format(global_record, common_part))
+
+
+
     df = pd.DataFrame()
-    print('gpp25:  df = {}'.format(df))
+
+    try:
+        df.loc[global_record, 'GTIN'] = common_part['baseKey']
+    except KeyError:
+        df.loc[global_record, 'GTIN'] = common_part['ReqValues']['reqValue']
+
     df.loc[global_record, 'errorcode'] = errcode
-    print('gpp27:  df = {}'.format(df))
+
     try:
         df.loc[global_record, 'variant'] = common_part['@variant']
     except KeyError:
         df.loc[global_record, 'variant'] = np.nan
 
-    try:
-        df.loc[global_record, 'basekey'] = common_part['baseKey']
-    except KeyError:
-        df.loc[global_record, 'basekey'] = common_part['ReqValues']['reqValue']
+    df = df[['GTIN','errorcode','variant']].copy()
 
-    try:
-        df.loc[global_record, 'idRecord'] = common_part['@idRecord']
-    except KeyError:
-        df.loc[global_record, 'idRecord'] = np.nan
+
 
     print('=' * 40)
 

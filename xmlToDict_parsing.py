@@ -41,20 +41,21 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
 
                 if int(errcode) != 0:
                     # просто записываем значение errcode и variant и переходим к следующему рекорду
-                    current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=global_record)
+                    general_parameters_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=global_record)
+                    current_df = general_parameters_df
 
                 # иначе, (если errorCode = 0)
                 else:
 
                     # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
-                    current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=global_record)
+                    general_parameters_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=global_record)
                     base_attribute_df = base_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, basic_attr_list=attr_list, global_record=global_record)
                     web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, web_attr_list=attr_list)
                     TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, global_record=global_record, tnved_attr_list=attr_list)
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
                     print('xtdp95: объединим базовые и web-атрибуты: df= \n')
-                    current_df = pd.concat([current_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
-                    # print('tb87: после объединения current_df=\n', current_df.to_string())
+                    current_df = pd.concat([general_parameters_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
+                    print('tb87: после объединения current_df=\n', current_df.to_string())
                     # print('\n')
 
                 if len(full_df) < 1:
@@ -69,33 +70,29 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
 
         if int(errcode) != 0:
             #  просто записываем значение errcode и variant
-
-            current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=int(errcode), global_record=None)
-
+            general_parameters_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=int(errcode), global_record=None)
+            current_df = general_parameters_df
         else:
             # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
-            current_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=None)
+            general_parameters_df = general_parameter_parser(XML_parsed_to_dict=XML_parsed_to_dict, errcode=errcode, global_record=None)
             base_attribute_df = base_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, basic_attr_list=attr_list, global_record=None)
             web_attributes_df = web_attribute_parser(XML_parsed_to_dict=XML_parsed_to_dict, web_attr_list=attr_list, global_record=None)
             TNVED_codes_df = TNVED_codes_parser(XML_parsed_to_dict=XML_parsed_to_dict, tnved_attr_list=attr_list, global_record=None)
 
-            current_df = pd.concat([current_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
+            current_df = pd.concat([general_parameters_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
 
         full_df = current_df.copy()
-    ##########################################################    ############################
+
     # изменим порядок первых двух столбцов
+    #cols = full_df.columns.tolist()
+    #newcols = []
+    #y = cols.pop(0)
+    #x = cols.pop(0)
+    #newcols.append(x)
+    #newcols.append(y)
+    #newcols.extend(cols)
 
-    cols = full_df.columns.tolist()
-    print('\ntb188: cols = ', cols)
-
-    newcols = []
-
-    y = cols.pop(0)
-    x = cols.pop(0)
-    newcols.append(x)
-    newcols.append(y)
-    newcols.extend(cols)
-    full_df = full_df[newcols].copy()
+    #full_df = full_df[newcols].copy()
     # cols = cols[-1:] + cols[:-1]
     return full_df
 

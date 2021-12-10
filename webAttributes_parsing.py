@@ -151,7 +151,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
                                 #        multiattrlist.append(web_attr_descr)
                                 #        print('wap150: текущее значение df= \n {}\n'.format(df))
 
-                                #except KeyError:
+                                # except KeyError:
                                 web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue'][MultValue_N]['@value']
                                 print('wap156: вызовем get_mapping_value')
                                 cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
@@ -167,7 +167,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
 
                     web_attr_id = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@extAttrId']
 
-                    #try:
+                    # try:
                     #    web_attr_descr = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@descr']
                     #    # if isinstance(web_attr_descr, str):
                     #    if web_attr_id not in web_attr_list:
@@ -176,7 +176,7 @@ def web_attribute_parser(XML_parsed_to_dict, web_attr_list, global_record=None):
                     #        df.loc[global_record, web_attr_id] = web_attr_descr
                     #        print('wap173: текущее значение df= \n {}\n'.format(df))
 
-                    #except KeyError:
+                    # except KeyError:
                     web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@value']
                     print('wap181: вызовем get_mapping_value')
                     cash, mapping_value = get_mapping_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
