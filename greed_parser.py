@@ -1,5 +1,5 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-from df_creating import get_total_df
+from df_creating import batch_requester
 import pandas as pd
 pd.options.display.max_colwidth = 150
 import requests
@@ -48,35 +48,21 @@ full_output_path = output_folder + output_file
 
 ''' сделаем запрос в ГС1'''
 #GTIN_list = ['4601075342390', '4601075342420']
-df = get_total_df(url=url, auth=auth, gtin_list=GTIN_list, attr_list=Attributes_list, batch_size=1)
+df = batch_requester(url=url, auth=auth, full_gtin_list=GTIN_list, attr_list=Attributes_list, batch_size=4)
 
 print(df)
 ''' выгрузим в эксель'''
 try:
-    df.to_excel(full_output_path, index=True, sheet_name='sheet_1')
+    df.to_excel(full_output_path, index=False, sheet_name='sheet_1')
 except Exception as e:
-    # потом доделать запись с timestamp
-#TODO в закомментированных строках  БАГ! с этими строками идет попытка сделать пустой запрос в ГС1.
-    '''
-    now = datetime.datetime.now()
-    full_output_path_without = full_output_path[(len(full_output_path) - 4):]
-    full_output_path_with_time_stamp = full_output_path_without + str(now) + '.xlsx'
-    df.to_excel(full_output_path_with_time_stamp, index=True, sheet_name='sheet_1')
-    '''
-    print('------------------\nво время записи в файл произошла ошибка:', e)
+    print('запись не удалась. ошибка {}',e)
+
+
 
 ''' сделаем отсечку времени окончания'''
 t1_stop = perf_counter() # окночание отсчета времение
 print("Время выполнения программы : {} \n".format(t1_stop-t1_start)) # посчитаем время выполнения скрипта
 
 
-'''
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-'''
+#TODO пофиксить в данном файле возможность работыбез EAV и чанками GTIN не более 50-ти.
