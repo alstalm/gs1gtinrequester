@@ -52,7 +52,7 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
             # если на входе получили несколько рекордов то для каждого рекорда
             for global_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])):
 
-                print('xtdp40: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
+                #print('xtdp40: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
 
                 errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
 
@@ -72,9 +72,9 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list):
                     web_attributes_df = parser.web_attribute_parser()
                     TNVED_codes_df = parser.TNVED_codes()
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
-                    print('xtdp95: объединим базовые и web-атрибуты: df= \n')
+                    #print('xtdp95: объединим базовые и web-атрибуты: df= \n')
                     current_df = pd.concat([general_parameters_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
-                    print('tb87: после объединения current_df=\n', current_df.to_string())
+                    #print('tb87: после объединения current_df=\n', current_df.to_string())
                     # print('\n')
 
                 if len(full_df) < 1:
@@ -167,14 +167,11 @@ def one_by_one_requester(source_df):
             final_output_df = current_output_df
         else:
             final_output_df = pd.concat([final_output_df, current_output_df],axis=0)
-            print('NV71: final_output_df = ',final_output_df)
+            #print('NV71: final_output_df = ',final_output_df)
 
     return final_output_df
 
-#TODO если количество чанков не целое, то остаток - не запрашивается. т.е. если 3 штина, а чанк = 2, то 3-й гтин запрошен не будет
-#TODO если чанками можно выбрать все гтины без остатка (целое количество) т.е. все ок.  (если 3 гтина, а чанк = 3)
-#TODO если размер чанка больше чем число гтин, то все ок.  (если 3 гтина, а чанк = 4)
-#TODO необходимо поставить ограничитель чанка = 50
+
 def batch_requester(full_gtin_list, attr_list, url=url, auth=auth, batch_size=1):
     """
     Данная функция суммирует итоговый датафрейм из датафреймов полученных в серии запросов.
@@ -194,10 +191,11 @@ def batch_requester(full_gtin_list, attr_list, url=url, auth=auth, batch_size=1)
     full_attr_df = pd.DataFrame()
 
     if len(full_gtin_list) >= batch_size:
-        while len(full_gtin_list) >= batch_size:
+        rest_of_gtin_list = full_gtin_list
+        while len(rest_of_gtin_list) >= batch_size:
 
-            current_gtin_list = full_gtin_list[:batch_size]
-            full_gtin_list = full_gtin_list[batch_size:]
+            current_gtin_list = rest_of_gtin_list[:batch_size]
+            rest_of_gtin_list = rest_of_gtin_list[batch_size:]
 
             try:
                 current_attr_df = get_current_df(curent_gtin_list=current_gtin_list, attr_list=attr_list, url=url, auth=auth)
@@ -208,6 +206,10 @@ def batch_requester(full_gtin_list, attr_list, url=url, auth=auth, batch_size=1)
             except:
 
                 pass
+        # чтобы не потерять остаток от цикла
+
+        current_attr_df = get_current_df(curent_gtin_list=rest_of_gtin_list, attr_list=attr_list, url=url, auth=auth)
+        full_attr_df = pd.concat([full_attr_df, current_attr_df], axis=0)
 
         # добавим остаток от последнего gtin_listб т.к. он не обрабатывается в цикле while
         # curent_gtin_list = gtin_list

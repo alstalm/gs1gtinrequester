@@ -37,13 +37,13 @@ class AtrrValueParesr:
         '''
 
 
-        print('gpp16: проверим что с globalrecord')
+        #print('gpp16: проверим что с globalrecord')
         if self.global_record is None:
             common_part = self.XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']
             global_record = 0
         else:
             common_part = self.XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][self.global_record]
-            print('gpp23:  globalrecord = {}, common_part = {}'.format(self.global_record, common_part))
+            #print('gpp23:  globalrecord = {}, common_part = {}'.format(self.global_record, common_part))
 
         df = pd.DataFrame()
 
@@ -60,8 +60,10 @@ class AtrrValueParesr:
             df.loc[self.global_record, 'variant'] = np.nan
 
         df = df[['GTIN', 'errorcode', 'variant']].copy()
+        print('GTIN = {}, errorcode = {}, variant = {} '.format(df['GTIN'].to_string(index=False),df['errorcode'].to_string(index=False),df['variant'].to_string(index=False) ))
 
-        print('=' * 40)
+
+        #print('=' * 40)
 
         return df
 
@@ -81,13 +83,13 @@ class AtrrValueParesr:
             common_part = self.XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][self.global_record]
 
         df = pd.DataFrame()
-        print('\n++++++++++++++++ ПАРСИНГ БАЗОВЫХ АТРИБУТОВ ++++++++++++++++\n')
+        #print('\n++++++++++++++++ ПАРСИНГ БАЗОВЫХ АТРИБУТОВ ++++++++++++++++\n')
 
         for base_attr_val_record in range(len(common_part['BaseAttributeValues']['value'])):
             attrName = common_part['BaseAttributeValues']['value'][base_attr_val_record]['@baseAttrId']
 
             if attrName in self.attr_list:
-                print('bap27: attrName {} в списке искомых атрибутов !!! '.format(attrName))
+                #print('bap27: attrName {} в списке искомых атрибутов !!! '.format(attrName))
                 try:
                     descr = common_part['BaseAttributeValues']['value'][base_attr_val_record]['@descr']
                     df.loc[self.global_record, attrName] = descr
@@ -95,13 +97,13 @@ class AtrrValueParesr:
                     attrValue = common_part['BaseAttributeValues']['value'][base_attr_val_record]['@value']
                     df.loc[self.global_record, attrName] = attrValue
             else:
-                print('bap35: attrName {} не в списке искомых атрибутов'.format(attrName))
-
+                #print('bap35: attrName {} не в списке искомых атрибутов'.format(attrName))
+                pass
         return df
 
 
     def TNVED_codes(self):
-        print('\n++++++++++++++++ ПАРСИНГ ТНВЭДов ++++++++++++++++\n')
+        #print('\n++++++++++++++++ ПАРСИНГ ТНВЭДов ++++++++++++++++\n')
         '''
         Данная функция вызывается из xmlToDict_parsing.table_from_dict_builder и парсит атрибуты только в рекордах узла SubDataObjectRecords с dataObjectId = "PROD_CLASS"
 
@@ -111,7 +113,7 @@ class AtrrValueParesr:
         :return:
         '''
         if self.global_record is None:
-            print('global_record is None, поэтому ')
+            #print('global_record is None, поэтому ')
 
             common_part = self.XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']
             global_record = 0
@@ -125,7 +127,7 @@ class AtrrValueParesr:
         if isinstance(common_part['SubDataObjectRecords']['record'], list):
 
             for SubDataObjectRecord in range(len(common_part['SubDataObjectRecords']['record'])):
-                print('\ntnved36: зашли в {}-й SubDataObjectRecord'.format(SubDataObjectRecord))
+                #print('\ntnved36: зашли в {}-й SubDataObjectRecord'.format(SubDataObjectRecord))
                 try:
                     if isinstance(common_part['SubDataObjectRecords']['record'][SubDataObjectRecord]['BaseAttributeValues']['value'], list) \
                             and common_part['SubDataObjectRecords']['record'][SubDataObjectRecord]['@dataObjectId'] == 'PROD_CLASS':
@@ -134,11 +136,11 @@ class AtrrValueParesr:
                             try:  # ЗДЕСЬ  РАЗБИРАЕМ ТНВЭДЫ
                                 tnved_attr_id = common_part['SubDataObjectRecords']['record'][SubDataObjectRecord]['BaseAttributeValues']['value'][value_number]['@baseAttrId']
                                 if tnved_attr_id not in self.attr_list:
-                                    print('tnved_attr_id = {} НЕ в списке исомых атрибутов'.format(tnved_attr_id))
+                                    #print('tnved_attr_id = {} НЕ в списке исомых атрибутов'.format(tnved_attr_id))
                                     pass
                                 else:
                                     tnved_value = common_part['SubDataObjectRecords']['record'][SubDataObjectRecord]['BaseAttributeValues']['value'][value_number]['@value']
-                                    print('tnved_attr_id = {} В списке исомых атрибутов и tnved_value = {}'.format(tnved_attr_id, tnved_value))
+                                    #print('tnved_attr_id = {} В списке исомых атрибутов и tnved_value = {}'.format(tnved_attr_id, tnved_value))
                                     df.loc[self.global_record, tnved_attr_id] = tnved_value
                             except:  #
                                 print('tnved33: в SubDataObjectRecord N={} в /BaseAttributeValues в записи  value_number={} что-то НЕОЖИДАННОЕ'.format(SubDataObjectRecord, value_number))
@@ -150,7 +152,7 @@ class AtrrValueParesr:
                             tnved_attr_id = common_part['SubDataObjectRecords']['record'][SubDataObjectRecord]['BaseAttributeValues']['value']['@baseAttrId']
                             tnved_value = common_part['SubDataObjectRecords']['record'][SubDataObjectRecord]['BaseAttributeValues']['value']['@value']
                             if tnved_attr_id not in self.attr_list:
-                                print('tnved40: web_attr_id {} не в web_attr_list'.format(tnved_attr_id))
+                                #print('tnved40: web_attr_id {} не в web_attr_list'.format(tnved_attr_id))
                                 pass
                             else:
                                 df.loc[self.global_record, tnved_attr_id] = tnved_value
@@ -160,29 +162,29 @@ class AtrrValueParesr:
 
 
                 except TypeError:  # нет  пути SubDataObjectRecords/record/AttributeValues нет или там только одно value
-                    print('tnved46: в SubDataObjectRecord = {} НЕ содержится TNVED'.format(SubDataObjectRecord))
-
+                    #print('tnved46: в SubDataObjectRecord = {} НЕ содержится TNVED'.format(SubDataObjectRecord))
+                    pass
         else:
-            print('запись всего одна')
+            #print('запись всего одна')
 
             try:
                 if isinstance(common_part['SubDataObjectRecords']['record']['BaseAttributeValues']['value'], list) and common_part['SubDataObjectRecords']['record']['@dataObjectId'] == 'PROD_CLASS':
-                    print('@dataObjectId = ', common_part['SubDataObjectRecords']['record']['@dataObjectId'])
+                    #'@dataObjectId = ', common_part['SubDataObjectRecords']['record']['@dataObjectId'])
                     for value_number in range(len(common_part['SubDataObjectRecords']['record']['BaseAttributeValues']['value'])):
                         try:  # ЗДЕСЬ  РАЗБИРАЕМ ТНВЭДЫ
                             tnved_attr_id = common_part['SubDataObjectRecords']['record']['BaseAttributeValues']['value'][value_number]['@baseAttrId']
                             if tnved_attr_id not in self.attr_list:
-                                print('tnved_attr_id = {} НЕ в списке исомых атрибутов'.format(tnved_attr_id))
+                                #print('tnved_attr_id = {} НЕ в списке исомых атрибутов'.format(tnved_attr_id))
                                 pass
                             else:
                                 tnved_value = common_part['SubDataObjectRecords']['record']['BaseAttributeValues']['value'][value_number]['@value']
-                                print('tnved_attr_id = {} В списке исомых атрибутов и tnved_value = {}'.format(tnved_attr_id, tnved_value))
+                                #print('tnved_attr_id = {} В списке исомых атрибутов и tnved_value = {}'.format(tnved_attr_id, tnved_value))
                                 df.loc[self.global_record, tnved_attr_id] = tnved_value
                         except:  #
                             print('tnved33: в SubDataObjectRecord в BaseAttributeValues в записи  value_number={} что-то НЕОЖИДАННОЕ'.format(value_number))
 
                 elif isinstance(common_part['SubDataObjectRecords']['record']['BaseAttributeValues']['value'], dict) and common_part['SubDataObjectRecords']['record']['@dataObjectId'] == 'PROD_CLASS':
-                    print('tnved39:в BaseAttributeValues есть ТОЛЬКО ОДНА запись')
+                    #print('tnved39:в BaseAttributeValues есть ТОЛЬКО ОДНА запись')
                     try:
                         tnved_attr_id = common_part['SubDataObjectRecords']['record']['BaseAttributeValues']['value']['@baseAttrId']
                         tnved_value = common_part['SubDataObjectRecords']['record']['BaseAttributeValues']['value']['@value']
@@ -196,9 +198,9 @@ class AtrrValueParesr:
 
 
             except TypeError:  # нет  пути SubDataObjectRecords/record/AttributeValues нет или там только одно value
-                print('tnved106: в SubDataObjectRecord  НЕ содержится TNVED')
-
-        print('tnved108 df =:', df.to_string())
+                #print('tnved106: в SubDataObjectRecord  НЕ содержится TNVED')
+                pass
+        #print('tnved108 df =:', df.to_string())
 
         return df
 
@@ -209,7 +211,7 @@ class AtrrValueParesr:
         # если нет или GS1AttrId или одного из его ключей, то идем в базу
 
         if cash.get(gs1_attrid, None) == None or cash.get(gs1_attrid).get(mapping_key, None) == None:
-            print('attfmap 20: запрашиваемое по ключу gs1_attrid= \'{}\' и mapping_key=\'{}\' ЕЩЕ НЕТ в кэше'.format(gs1_attrid, mapping_key))
+            #print('attfmap 20: запрашиваемое по ключу gs1_attrid= \'{}\' и mapping_key=\'{}\' ЕЩЕ НЕТ в кэше'.format(gs1_attrid, mapping_key))
             con = pymysql.connect(host=host, user=user, port=port, password=password, database=database)
             with con:
                 cur = con.cursor()
@@ -239,8 +241,8 @@ class AtrrValueParesr:
         if mapping_value == None:  # если в базе нет маппинга
             mapping_value = mapping_key
         else:
-            print('attfmap 66: на выход функции отдаем mapping_value=', mapping_value)
-
+            #print('attfmap 66: на выход функции отдаем mapping_value=', mapping_value)
+            pass
         return cash, mapping_value
 
 
@@ -264,7 +266,7 @@ class AtrrValueParesr:
         cash = {}
 
         df = pd.DataFrame()
-        print('\n++++++++++++++++ ПАРСИНГ WEB-АТРИБУТОВ ++++++++++++++++\n')
+        #print('\n++++++++++++++++ ПАРСИНГ WEB-АТРИБУТОВ ++++++++++++++++\n')
         for infotype_record in range(len(common_part['InfoTypeRecords']['record'])):
             try:  # если в infotype_record есть AttributeValues и это или список или словарь
                 if isinstance(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'], list):  # если в InfoTypeRecords/record/AttributeValues несколько value
@@ -288,7 +290,7 @@ class AtrrValueParesr:
                                         #       print('wap46: текущее значение df= \n {}\n'.format(df))
                                         #   except KeyError:
                                         web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue']['@value']
-                                        print('wap154: вызовем get_mapping_value')
+                                        #print('wap154: вызовем get_mapping_value')
                                         cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                         df.loc[self.global_record, web_attr_id] = mapping_value
                                         # print('wap49: текущее значение df= \n {}\n'.format(df))
@@ -309,7 +311,7 @@ class AtrrValueParesr:
 
                                             # except KeyError:
                                             web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue'][MultValue_N]['@value']
-                                            print('wap74: вызовем get_mapping_value')
+                                            #print('wap74: вызовем get_mapping_value')
                                             cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                             multiattrlist.append(mapping_value)
 
@@ -334,7 +336,7 @@ class AtrrValueParesr:
                                 # except KeyError:
                                 #    print('wap85:  !!! в web_attr_id={} параметра @descr НЕТ '.format(web_attr_id))
                                 web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['@value']
-                                print('wap99: вызовем get_mapping_value')
+                                #print('wap99: вызовем get_mapping_value')
                                 cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                 df.loc[self.global_record, web_attr_id] = mapping_value
 
@@ -365,10 +367,11 @@ class AtrrValueParesr:
                                 # except KeyError:
 
                                 if web_attr_id not in self.attr_list:
-                                    print('wap127: web_attr_id {} НЕ в web_attr_list'.format(web_attr_id))
+                                    #print('wap127: web_attr_id {} НЕ в web_attr_list'.format(web_attr_id))
+                                    pass
                                 else:
                                     web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue']['@value']
-                                    print('wap133: вызовем get_mapping_value')
+                                    #print('wap133: вызовем get_mapping_value')
                                     cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                     df.loc[self.global_record, web_attr_id] = mapping_value
                                     # print('wap125: текущее значение df= \n {}\n'.format(df))
@@ -391,14 +394,14 @@ class AtrrValueParesr:
 
                                     # except KeyError:
                                     web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue'][MultValue_N]['@value']
-                                    print('wap156: вызовем get_mapping_value')
+                                    #print('wap156: вызовем get_mapping_value')
                                     cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                                     if web_attr_id not in self.attr_list:
                                         continue
                                     else:
                                         multiattrlist.append(mapping_value)
 
-                                        print('wap150: текущее значение df= \n {}\n'.format(df))
+                                        #print('wap150: текущее значение df= \n {}\n'.format(df))
                                     df.loc[self.global_record, web_attr_id] = multiattrlist
 
                     except KeyError:
@@ -416,10 +419,11 @@ class AtrrValueParesr:
 
                         # except KeyError:
                         web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@value']
-                        print('wap181: вызовем get_mapping_value')
+                        #print('wap181: вызовем get_mapping_value')
                         cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
                         if web_attr_id not in self.attr_list:
-                            print('wap170: web_attr_id {} не в web_attr_list'.format(web_attr_id))
+                            #print('wap170: web_attr_id {} не в web_attr_list'.format(web_attr_id))
+                            pass
                         else:
                             df.loc[self.global_record, web_attr_id] = mapping_value
 
@@ -428,7 +432,8 @@ class AtrrValueParesr:
                     except:  #
                         print('wap177: в infotype_record N={} в /AttributeValues в записи  что-то НЕОЖИДАННОЕ'.format(infotype_record))
             except TypeError:  # нет  пути InfoTypeRecords/record/AttributeValues нет или там только одно value
-                print('wap179: в infotype_record {} НЕ содержится AttributeValues'.format(infotype_record))
+                #print('wap179: в infotype_record {} НЕ содержится AttributeValues'.format(infotype_record))
+                pass
 
         return df
 

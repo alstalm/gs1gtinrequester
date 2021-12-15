@@ -48,9 +48,9 @@ full_output_path = output_folder + output_file
 
 ''' сделаем запрос в ГС1'''
 #GTIN_list = ['4601075342390', '4601075342420']
-df = batch_requester(url=url, auth=auth, full_gtin_list=GTIN_list, attr_list=Attributes_list, batch_size=4)
+df = batch_requester(url=url, auth=auth, full_gtin_list=GTIN_list, attr_list=Attributes_list, batch_size=2)
 
-print(df)
+#print(df)
 ''' выгрузим в эксель'''
 try:
     df.to_excel(full_output_path, index=False, sheet_name='sheet_1')
