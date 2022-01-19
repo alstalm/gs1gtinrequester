@@ -7,6 +7,7 @@ import xmltodict
 import pymysql
 from retry import retry
 
+
 with open ('params.yaml', 'r', encoding='UTF-8') as f:
     params = yaml.safe_load(f)
 
@@ -206,7 +207,25 @@ class AtrrValueParesr:
 
 
     @staticmethod
-    @retry(TimeoutError, tries=5, delay=1, max_delay=180, backoff=3)
+    @retry(TimeoutError, tries=3, delay=3, max_delay=10, backoff=3)
+
+    def test_connection():
+        """Tests the connection by executing a select 1 query"""
+        con = pymysql.connect(host=host, user=user, port=port, password=password, database=database)
+        status, message = False, ''
+        try:
+            with con:
+                cur = con.cursor()
+                cur.execute("select 1")
+                if cur.fetchone():
+                    status = True
+                    message = 'Connection successfully tested'
+        except Exception as e:
+            status = False
+            message = str(e)
+
+        return status, message
+
     def valueMap_value(cash: object, gs1_attrid: object, mapping_key: object) -> object:
         # если нет или GS1AttrId или одного из его ключей, то идем в базу
 
