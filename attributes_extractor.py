@@ -21,11 +21,12 @@ database = params['DB_database']
 
 class AtrrValueParesr:
 
-    def __init__(self, XML_parsed_to_dict, errcode, attr_list, global_record=None ):
+    def __init__(self, XML_parsed_to_dict, errcode, attr_list, global_record=None, get_valueMap=True ):
         self.XML_parsed_to_dict = XML_parsed_to_dict
         self.errcode = errcode
         self.global_record = global_record
         self.attr_list = attr_list
+        self.get_valueMap = get_valueMap
 
 
     def general_parameters(self):
@@ -69,7 +70,7 @@ class AtrrValueParesr:
         return df
 
 
-    def base_attributes(self):
+    def base_attributes_parser(self):
         '''
         Данная функция вызывается из table_from_dict_builder и парсит из переданного словаря БАЗОВЫЕ атрибуты.
         :param XML_parsed_to_dict:
@@ -103,7 +104,7 @@ class AtrrValueParesr:
         return df
 
 
-    def TNVED_codes(self):
+    def TNVED_codes_parser(self):
         #print('\n++++++++++++++++ ПАРСИНГ ТНВЭДов ++++++++++++++++\n')
         '''
         Данная функция вызывается из xmlToDict_parsing.table_from_dict_builder и парсит атрибуты только в рекордах узла SubDataObjectRecords с dataObjectId = "PROD_CLASS"
@@ -208,7 +209,7 @@ class AtrrValueParesr:
 
     @staticmethod
     @retry(TimeoutError, tries=3, delay=3, max_delay=10, backoff=3)
-
+    
     def test_connection():
         """Tests the connection by executing a select 1 query"""
         con = pymysql.connect(host=host, user=user, port=port, password=password, database=database)
@@ -226,42 +227,60 @@ class AtrrValueParesr:
 
         return status, message
 
-    def valueMap_value(cash: object, gs1_attrid: object, mapping_key: object) -> object:
-        # если нет или GS1AttrId или одного из его ключей, то идем в базу
+    def get_value_from_valueMap(cash: object, gs1_attrid: object, mapping_key: object, get_valueMap=False) -> object:
 
-        if cash.get(gs1_attrid, None) == None or cash.get(gs1_attrid).get(mapping_key, None) == None:
-            #print('attfmap 20: запрашиваемое по ключу gs1_attrid= \'{}\' и mapping_key=\'{}\' ЕЩЕ НЕТ в кэше'.format(gs1_attrid, mapping_key))
+        def db_request(host, user, port, password, database):
             con = pymysql.connect(host=host, user=user, port=port, password=password, database=database)
             with con:
                 cur = con.cursor()
                 query = ''' SELECT TRIM(BOTH '"' FROM (ValueMap->'$."{}"'))
-                            FROM Lst_AttrToGS1Attr latga
-                            WHERE Deleted = 0 AND Operation = 'import' AND GS1AttrId = '{}'
-                        '''.format(str(mapping_key), str(gs1_attrid))
+                                            FROM Lst_AttrToGS1Attr latga
+                                            WHERE Deleted = 0 AND Operation = 'import' AND GS1AttrId = '{}'
+                                        '''.format(str(mapping_key), str(gs1_attrid))
                 cur.execute(query)
-
                 DBresponse = cur.fetchone()
+            return  DBresponse
 
-            if DBresponse == None or DBresponse[0] == None:  # None получим если нет в принципе такой записи с указанным GS1AttrId, а 'NULL' если GS1AttrId но для него нет valueMap
-                mapping_value = None  # т.к. маппинга нет, тогда функция вернет attrId из эксемеля (в mapping_key подается attrId)
 
-            else:
-                mapping_value = DBresponse[0]
-                # поскольку в базе что-то есть, запишем в кэш полученное значение, но сперва проверим, есть ли там хотя бы атрибут
-                if cash.get(gs1_attrid, None) == None:  # если нет еще
-                    cash[gs1_attrid] = {mapping_key: mapping_value}
+
+        if get_valueMap == False:
+            mapping_value = mapping_key
+
+        else:
+            if cash.get(gs1_attrid, None) == None or cash.get(gs1_attrid).get(mapping_key, None) == None:
+                #print('attfmap 20: запрашиваемое по ключу gs1_attrid= \'{}\' и mapping_key=\'{}\' ЕЩЕ НЕТ в кэше'.format(gs1_attrid, mapping_key))
+                DBresponse = db_request(host, user, port, password, database)
+                if DBresponse == None or DBresponse[0] == None:  # None получим если нет в принципе такой записи с указанным GS1AttrId, а 'NULL' если GS1AttrId но для него нет valueMap
+                    mapping_value = None  # т.к. маппинга нет, тогда функция вернет attrId из эксемеля (в mapping_key подается attrId)
                 else:
+                    mapping_value = DBresponse[0]
+                    # поскольку в базе что-то есть, запишем в кэш полученное значение, но сперва проверим, есть ли там хотя бы атрибут
+                    if cash.get(gs1_attrid, None) == None:  # если нет еще
+                        cash[gs1_attrid] = {mapping_key: mapping_value}
+                    else:
+                        cash[gs1_attrid][mapping_key] = mapping_value
+
+            # в этом случае и gs1_attrid и ключ-значение для него есть
+
+            elif cash.get(gs1_attrid, None) != None and cash.get(gs1_attrid).get(mapping_key, None) != None:
+                mapping_value = cash[gs1_attrid][mapping_key]
+
+            elif cash.get(gs1_attrid).get(mapping_key, None) == None:
+                DBresponse = db_request(host, user, port, password, database)
+                if DBresponse == None or DBresponse[0] == None:  # None получим если нет в принципе такой записи с указанным GS1AttrId, а 'NULL' если GS1AttrId но для него нет valueMap
+                    mapping_value = None  # т.к. маппинга нет, тогда функция вернет attrId из эксемеля (в mapping_key подается attrId)
+                else:
+                    mapping_value = DBresponse[0]
                     cash[gs1_attrid][mapping_key] = mapping_value
 
-        # в этом случае и gs1_attrid и ключ-значение для него есть
-        else:
-            mapping_value = cash[gs1_attrid][mapping_key]
 
-        if mapping_value == None:  # если в базе нет маппинга
-            mapping_value = mapping_key
-        else:
-            #print('attfmap 66: на выход функции отдаем mapping_value=', mapping_value)
-            pass
+
+
+            if mapping_value == None:  # если в базе нет маппинга
+                mapping_value = mapping_key
+            else:
+                #print('attfmap 66: на выход функции отдаем mapping_value=', mapping_value)
+                pass
         return cash, mapping_value
 
 
@@ -277,7 +296,7 @@ class AtrrValueParesr:
         '''
         if self.global_record is None:
             common_part = self.XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']
-            global_record = 0
+
         else:
             common_part = self.XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][self.global_record]
 
@@ -310,7 +329,7 @@ class AtrrValueParesr:
                                         #   except KeyError:
                                         web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue']['@value']
                                         #print('wap154: вызовем get_mapping_value')
-                                        cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
+                                        cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                                         df.loc[self.global_record, web_attr_id] = mapping_value
                                         # print('wap49: текущее значение df= \n {}\n'.format(df))
 
@@ -331,7 +350,7 @@ class AtrrValueParesr:
                                             # except KeyError:
                                             web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue'][MultValue_N]['@value']
                                             #print('wap74: вызовем get_mapping_value')
-                                            cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
+                                            cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                                             multiattrlist.append(mapping_value)
 
                                         df.loc[self.global_record, web_attr_id] = multiattrlist
@@ -356,7 +375,7 @@ class AtrrValueParesr:
                                 #    print('wap85:  !!! в web_attr_id={} параметра @descr НЕТ '.format(web_attr_id))
                                 web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['@value']
                                 #print('wap99: вызовем get_mapping_value')
-                                cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
+                                cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                                 df.loc[self.global_record, web_attr_id] = mapping_value
 
                                 # print('wap93: текущее значение df= \n {}\n'.format(df))
@@ -391,7 +410,7 @@ class AtrrValueParesr:
                                 else:
                                     web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue']['@value']
                                     #print('wap133: вызовем get_mapping_value')
-                                    cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
+                                    cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                                     df.loc[self.global_record, web_attr_id] = mapping_value
                                     # print('wap125: текущее значение df= \n {}\n'.format(df))
 
@@ -414,7 +433,7 @@ class AtrrValueParesr:
                                     # except KeyError:
                                     web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue'][MultValue_N]['@value']
                                     #print('wap156: вызовем get_mapping_value')
-                                    cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
+                                    cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                                     if web_attr_id not in self.attr_list:
                                         continue
                                     else:
@@ -439,7 +458,7 @@ class AtrrValueParesr:
                         # except KeyError:
                         web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@value']
                         #print('wap181: вызовем get_mapping_value')
-                        cash, mapping_value = self.valueMap_value(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value)
+                        cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                         if web_attr_id not in self.attr_list:
                             #print('wap170: web_attr_id {} не в web_attr_list'.format(web_attr_id))
                             pass

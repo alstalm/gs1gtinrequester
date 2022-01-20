@@ -44,8 +44,9 @@ auth = HTTPBasicAuth(login, password)
 try:
     print('проверим соединение с БД')
 
-    cash, test_result = AtrrValueParesr.valueMap_value(cash={}, gs1_attrid = 'TEST_CONNECTION', mapping_key = '')
-    if test_result == {}:
+    cash, test_result = AtrrValueParesr.get_value_from_valueMap(cash={}, gs1_attrid ='TEST_CONNECTION', mapping_key ='')
+    print('test_result =',test_result)
+    if test_result == '':
         print('соединение с БД установлено')
     else:
         print('проблемы с сеоединением с БД НК')
@@ -65,7 +66,7 @@ try:
         print('\nфайл не доступен для записи\n')
 
 except Exception as e:
-    print(e)
+    print('проблемы с сеоединением с БД НК:',e)
 
 ''' сделаем отсечку времени окончания'''
 t1_stop = perf_counter() # окночание отсчета времение

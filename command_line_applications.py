@@ -48,6 +48,7 @@ class cli_class:
                             help='''Выходной файл. Путь допустимо указывать как абсолютный, так и относительный. Если файл лежит в той же директории, что и исполняемый файл, то можно указать только его название''')  # dest="output_file", default='out_file.xlsx',
 
         parser.add_argument("-p", "--print", help="print result in current window", action='store_true')  # ,,
+        parser.add_argument("-novm", "--no_valueMap", help="отключает запрос в БД для получения valueMap", action='store_true')
         parser.add_argument("-v", "--verbose", help="print details in current window", action='store_true')
         # group = parser.add_mutually_exclusive_group()
         # group.add_mutually_exclusive_group("-c", "--clipboard", type=str, help="input from clipboard" )
@@ -58,7 +59,7 @@ class cli_class:
         self.output_file_full_path = args.o.name
         self.printout_result = args.print
         self.verbose_result = args.verbose
-
+        self.no_valueMap = args.no_valueMap
     @staticmethod
     def test_db_connection():
         #TODO добавить Tкy Except
@@ -143,10 +144,15 @@ class cli_class:
         if all_checks_passed:
             print(output_message)
 
+            if self.no_valueMap:
+                get_valueMap = False
+            else:
+                get_valueMap = True
+
             input_df = pd.read_excel(self.input_file_full_path, dtype={'GTIN': object})
             input_df = input_df.loc[:, ['GTIN', 'GS1Attr']]
 
-            output_df = one_by_one_requester(source_df=input_df)
+            output_df = one_by_one_requester(source_df=input_df,get_valueMap=get_valueMap)
             output_df.to_excel(self.output_file_full_path, sheet_name='sheet_1', index=False)
 
             if self.printout_result:
@@ -168,8 +174,8 @@ class cli_class:
 
 
 if __name__ == "__main__":
-    inp = 'data/test_in_file.xlsx'
-    outp = 'data/parsed.xlsx2'
+    inp = 'data/test_in_file_2.xlsx'
+    outp = 'data/parsed_2.xlsx2'
     args = argparse.Namespace(input_file_full_path=inp, output_file_full_path =outp)
     cli_class.eav_file_generator(args)
 
