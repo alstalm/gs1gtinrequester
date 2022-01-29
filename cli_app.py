@@ -1,5 +1,9 @@
-from command_line_applications import cli_class
+from command_line_applications import main
+
+
 
 if __name__ == "__main__":
-    x = cli_class()
-    x.eav_file_generator()
+    x = main()
+
+
+

@@ -37,8 +37,6 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap, verbose
     '''
     Данная функция принимает на вход из функции get_curent_df распарсенный в ловарь XML и список атрибутов
     1. ВЫзывает парсеры основных параметров, базовых атрибутов и WEB атрибутов
-
-
     '''
 
     full_df = pd.DataFrame()
@@ -49,7 +47,6 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap, verbose
         # что-то типа этого: len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])
 
         if isinstance(variant_from_second_redord_for_try, str):  # просто проверяем что есть второй рекорд у которого есть хоть какое-то значение варинта
-            #print('tb51: рекордов больше чем 1. успешно прошли try. идем в цикл парсинга нескольких записей \n')
             # если на входе получили несколько рекордов то для каждого рекорда
             for global_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])):
 
@@ -74,10 +71,8 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap, verbose
                     web_attributes_df = parser.web_attribute_parser()
                     TNVED_codes_df = parser.TNVED_codes_parser()
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
-                    #print('xtdp75: объединим базовые и web-атрибуты: df= \n')
                     current_df = pd.concat([general_parameters_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
-                    #print('tb77: после объединения current_df=\n', current_df.to_string())
-                    #print('\n')
+
 
                 if len(full_df) < 1:
                     full_df = current_df.copy()
@@ -174,7 +169,6 @@ class gs1_requester:
                 final_output_df = current_output_df
             else:
                 final_output_df = pd.concat([final_output_df, current_output_df],axis=0)
-                #print('NV71: final_output_df = ',final_output_df)
 
         return final_output_df
 
@@ -235,13 +229,10 @@ class gs1_requester:
     @staticmethod
     def grid_to_eav(one_chunk_parsed_grid_df, one_chunk_initial_eav_df):
         cols_list = one_chunk_parsed_grid_df.columns.tolist()
-        print('\ndfc238: функция grid_to_eav получила на вход грид one_chunk_parsed_grid_df=\n', one_chunk_parsed_grid_df)
-        print('\ndfc239: функция grid_to_eav получила на вход input_for_eav_df=\n', one_chunk_initial_eav_df)
+
         if len(cols_list) > 3:
             current_output_df = one_chunk_parsed_grid_df.copy()
             current_gs1attrs_list = current_output_df.columns.values.tolist()
-
-            #print('\ndfc242: current_gs1attrs_list',current_gs1attrs_list)
 
             # названия столбцов перенесем в строки (из широкой таблицы сделаем длинную)
             # переименуем результат
@@ -250,23 +241,14 @@ class gs1_requester:
                 .rename(columns={'variable': 'GS1Attr_name', 'value': 'GS1Attr_value'})\
                 .drop_duplicates()
 
-            #print('\ndfc250: transformed_to_long_table_current_output_df=\n', transformed_to_long_table_current_output_df)
-            #print('\ndfc251: input_for_eav_df=\n', input_for_eav_df)
-            #print('\ndfc252: dtypes of input_for_eav_df =\n', input_for_eav_df.dtypes)
-            #print('\ndfc253: dtypes of transformed_to_long_table_current_output_df =\n', transformed_to_long_table_current_output_df.dtypes)
-
             one_chunk_initial_eav_df.GTIN = one_chunk_initial_eav_df.GTIN.astype(str)
             one_chunk_initial_eav_df.GS1Attr_name = one_chunk_initial_eav_df.GS1Attr_name.astype(str)
             transformed_to_long_table_current_output_df.GTIN = transformed_to_long_table_current_output_df.GTIN.astype(str)
             transformed_to_long_table_current_output_df.GS1Attr_name = transformed_to_long_table_current_output_df.GS1Attr_name.astype(str)
 
-            print('\ndfc 263: исходный грид. трансформированный в длинну: transformed_to_long_table_current_output_df\n', transformed_to_long_table_current_output_df.to_string())
             joined_df = pd.merge(one_chunk_initial_eav_df, transformed_to_long_table_current_output_df, on=['GTIN', 'GS1Attr_name'])
-
-            print('\ndfc 266: смердженный результат: joined_df\n', joined_df.to_string())
-            #print('\ndfc252: joined_df=\n',joined_df)
             current_output_df = joined_df[['GTIN', 'errorcode', 'variant', 'GS1Attr_name', 'GS1Attr_value']].copy()
-            #print('\ndfc254: current_output_df=\n', current_output_df)
+
         else:
             current_output_df =one_chunk_parsed_grid_df
         return current_output_df
@@ -287,81 +269,45 @@ class gs1_requester:
         для любого списка атрибутов функция всегда дополнительно возвращает значение варианта карточки товара
         пример записи функции GetTable(gtin_list = GTIN_list, attr_list = Attributes_list)
         """
-        ############################# НОВЫЙ КУСОК НАЧАЛСЯ
-        full_gtin_list = self.source_df.loc[:, 'GTIN'].values.tolist()
-        full_attr_list = self.source_df.loc[:, 'GS1Attr'].values.tolist()
-
-
-        ############################# НОВЫЙ КУСОК ЗАКОНЧИЛСЯ
-
-
         output_eav_df = pd.DataFrame()
 
         if len(self.source_df) >= chunk:
-            #rest_of_gtin_list = full_gtin_list # так было
-            #rest_of_attr_list = full_attr_list # так было
+
             rest_of_eav_df = self.source_df
             while len(rest_of_eav_df) >= chunk:
 
                 current_eav_df = rest_of_eav_df[:chunk]
                 rest_of_eav_df = rest_of_eav_df[chunk:]
 
+                current_gtin_list = current_eav_df['GTIN']
+                rest_of_gtin_list = rest_of_eav_df['GTIN']
 
-                current_gtin_list = current_eav_df['GTIN'] # подается на вход get_current_df()
-                rest_of_gtin_list = rest_of_eav_df['GTIN'] # остаток. проверяется после прохождения цикла и если выполняется условия - подается на вход get_current_df()
-
-                current_attr_list = current_eav_df['GS1Attr'] # подается на вход get_current_df()
-                rest_of_attr_list = rest_of_eav_df['GS1Attr'] # остаток. проверяется после прохождения цикла и если выполняется условия - подается на вход get_current_df()
-
+                current_attr_list = current_eav_df['GS1Attr']
+                rest_of_attr_list = rest_of_eav_df['GS1Attr']
 
                 try:
                     current_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=list(set(current_attr_list)), url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
-                    print('\nпреобразуем текущий чанк в EAV\n')
+
                     current_ready_chunk_of_eav_df = gs1_requester.grid_to_eav(one_chunk_parsed_grid_df=current_attr_df, one_chunk_initial_eav_df=current_eav_df.rename(columns={'GS1Attr': 'GS1Attr_name'}))
 
-                    # вариант 1. можно здесь преобразовать полученый грид. и в input_for_eav_df подать current_eav_df
                     if len(output_eav_df) < 1:
                         output_eav_df = current_ready_chunk_of_eav_df.copy()
                     else:
                         output_eav_df = pd.concat([output_eav_df, current_ready_chunk_of_eav_df], axis=0)
                 except:
-
                     pass
-            # если есть остаток, то чтобы не потерять его запросим последний раз
             if len(rest_of_eav_df) > 0:
 
                 current_attr_df = get_current_df(current_gtin_list=rest_of_gtin_list, attr_list=list(set(rest_of_attr_list)), url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
-                # вариант 1. тогда здесь тоже надо преобразовать полученый грид. и в input_for_eav_df подать current_eav_df
                 current_ready_chunk_of_eav_df = gs1_requester.grid_to_eav(one_chunk_parsed_grid_df=current_attr_df, one_chunk_initial_eav_df=rest_of_eav_df.rename(columns={'GS1Attr': 'GS1Attr_name'}))
                 output_eav_df = pd.concat([output_eav_df, current_ready_chunk_of_eav_df], axis=0)
-                # в ариант1. .. и переименовать full_attr_df в output_eav_df
+
         else:
-            current_gtin_list = full_gtin_list
-            current_attr_list = full_attr_list
-            print('\ndfc314: current_gtin_list:\n', current_gtin_list)
-            print('\ndfc315: current_attr_list\n',current_attr_list)
+
+            current_gtin_list = self.source_df.loc[:, 'GTIN'].values.tolist()
+            current_attr_list = self.source_df.loc[:, 'GS1Attr'].values.tolist()
 
             full_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=current_attr_list, url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
-            print('\ndfc318: full_attr_df =\n', full_attr_df.to_string())
-
             output_eav_df = gs1_requester.grid_to_eav(one_chunk_parsed_grid_df= full_attr_df, one_chunk_initial_eav_df=self.source_df.rename(columns={'GS1Attr': 'GS1Attr_name'}))
-            print('\ndfc321: output_eav_df =\n',output_eav_df )
-
-
-
 
         return output_eav_df
-
-
-
-
-
-
-
-
-
-
-
-
-
-

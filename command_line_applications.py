@@ -1,7 +1,6 @@
 import pandas as pd
 from df_creating import gs1_requester
 from attributes_extractor import AtrrValueParesr
-
 import sys
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
@@ -32,224 +31,101 @@ general_description = '''Утилита парсинга ГС1. Делает з�
 
 
 
-class cli_class:
+def get_table_from_clipboard(args):
+    gtins = args.gtins
+    attributes = args.attributes
 
-    def __init__(self):
+    print('gtins = ->{}<- and type = {}'.format(gtins, type(gtins)))
+    print('attributes = ->{}<- and type = {}'.format(attributes, type(attributes)))
 
-        parser = argparse.ArgumentParser(formatter_class=RawDescriptionHelpFormatter, description=general_description)
+def eav_file_generator(args): # in_file, out_file
+    print('\n' + '-' * 20)
 
-        parser.add_argument('-i', metavar="in_file", nargs='?',
-                            type=argparse.FileType('r'),  # str , #argparse.FileType('r'),                     #encoding='Windows-1252'), # Windows-1252 encoded XLSX file, , encoding='latin-1'
-                            # action="store",
-                            default=sys.stdin,  # argparse.FileType('r'),
-                            help='''Входной файл с двумя обязательными столбцами \"GTIN\" и \"GS1Attr\". Если файл лежит в той же директории, что и исполняемый файл, то можно указать только его название ''')
+    #print('parsing has started \n')
 
-        parser.add_argument('-o', metavar="out_file",
-                            type=argparse.FileType('w'), default=sys.stdout,
-                            help='''Выходной файл. Путь допустимо указывать как абсолютный, так и относительный. Если файл лежит в той же директории, что и исполняемый файл, то можно указать только его название''')  # dest="output_file", default='out_file.xlsx',
+    input_df = pd.read_excel(self.input_file_full_path, dtype={'GTIN': object})
+    input_df = input_df.loc[:, ['GTIN', 'GS1Attr']]
 
-        parser.add_argument("-p", "--print", help="print result in current window", action='store_true')  # ,,
-        parser.add_argument("-novm", "--no_valueMap", help="отключает запрос в БД для получения valueMap",  action='store_true', )
-        parser.add_argument("-v", "--verbose", help="отображает процесспарсинга GS1", action='store_true')
-        parser.add_argument("-g", "--grid", help="столбцы входного файла содержат столбец 'GTIN' и как минимум еще один столбец с произвольным значением GS1AttrId", action='store_true')
-        parser.add_argument("-c", "--chunk", help="размер чанка (порции выгрузки)", default=50 , type=int)
-        # group = parser.add_mutually_exclusive_group()
-        # group.add_mutually_exclusive_group("-c", "--clipboard", type=str, help="input from clipboard" )
-        # group.add_mutually_exclusive_group("-f", "--file", type=str, help="input from file" )
-        args = parser.parse_args()
+    output_df = one_by_one_requester(source_df=input_df)
+    output_df.to_excel(self.output_file_full_path, sheet_name='sheet_1', index=False)
 
-        self.input_file_full_path = args.i.name
-        self.output_file_full_path = args.o.name
-        self.printout_result = args.print
-        self.verbose_result = args.verbose
-        self.no_valueMap = args.no_valueMap
-        self.grid = args.grid
-        self.chunk = args.chunk
+    if self.printout_result:
+        print('\nfile has successfully written. \n\ncurrent result:\n{}'.format(output_df.to_string(index=False)))
+    else:
+        pass # print('\nfile has successfully written')
 
-    @staticmethod
-    def test_db_connection():
-        #TODO добавить Tкy Except
-        try:
-            status, message = AtrrValueParesr.test_connection()
-        except Exception as e:
-            status = False
-            message = str(e)
-        return  status, message
+    if self.verbose_result:
 
-    def check_output_file_extension(self, output_file_full_path):
-        extension = str(output_file_full_path[(len(output_file_full_path) - 5):])
-        if extension == '.xlsx':
-            current_function_result = True
-        else:
-            current_function_result = False
-        return current_function_result
+        print('\nhello from verbose inside eav_file_generator')
+    else:
+        pass #
 
-    def check_input_file_format_eav(self, input_file_full_path):
-        input_df = pd.read_excel(input_file_full_path)
-        header_list = list(input_df.columns.values)
-        print('header_list =',header_list)
-        needed_columns = ['GTIN',	'GS1Attr']
-        if header_list == needed_columns:
-            current_function_result = True
-        else:
-            current_function_result = False
-        return current_function_result
+    print('\nfile has successfully written')
 
 
-    def check_input_file_format_grid(self, input_file_full_path):
-        input_df = pd.read_excel(input_file_full_path)
-        try:
-            full_gtin_list = input_df['GTIN'].values.tolist()
-            column_list = input_df.columns.values.tolist()
-            attr_list = list(column_list)
-            attr_list.remove('GTIN')
-
-            if len(attr_list)>0 and 'GTIN' in column_list and len(full_gtin_list) > 0:
-                current_function_result = True
-            else:
-                current_function_result = False
-        except Exception as e:
-            print('!!!!!!!!',e)
-            current_function_result = False
-        return current_function_result
+def parse_args():
 
 
-    @staticmethod
-    def preliminary_single_check(current_check_result, negative_output_message, previous_check_passed = True, previous_output_message ='', skip_this_check=False):
-        positive_output_message = 'Все предварительные проверки пройдены. Начался парсинг GS1 \n'
-        if skip_this_check == True and previous_check_passed==False:
-            go_to_next_check = False
-            output_message = previous_output_message
-        elif skip_this_check == True and previous_check_passed==True:
-            go_to_next_check = True
-            output_message = positive_output_message
-        elif previous_check_passed == True and current_check_result == True:
-            go_to_next_check = True
-            output_message = positive_output_message
-        elif previous_check_passed == False:
-            go_to_next_check = False
-            output_message  = previous_output_message
-        elif current_check_result == False:
-            go_to_next_check = False
-            output_message = negative_output_message
-        return go_to_next_check, output_message
+    parser = argparse.ArgumentParser(formatter_class=RawDescriptionHelpFormatter, description=general_description)
+    subparsers = parser.add_subparsers(dest='subparser_name')
+    subparser1 = subparsers.add_parser('file')
 
+    subparser1.add_argument('-i', metavar="in_file", nargs='?',
+                        type=argparse.FileType('r'),  # str , #argparse.FileType('r'),                     #encoding='Windows-1252'), # Windows-1252 encoded XLSX file, , encoding='latin-1'
+                        # action="store",
+                        default=sys.stdin,  # argparse.FileType('r'),
+                        help='''Входной файл с двумя обязательными столбцами \"GTIN\" и \"GS1Attr\". Если файл лежит в той же директории, что и исполняемый файл, то можно указать только его название ''',
+                        required=False)
 
-    def preliminary_check_set(self):
-         # проерка соединения
-        is_connected_to_database, connection_message = cli_class.test_db_connection()
-        go_to_next_check, output_message = cli_class.preliminary_single_check(skip_this_check=self.no_valueMap,
-                                                                              current_check_result=is_connected_to_database,
-                                                                              negative_output_message=' - ' + connection_message)
+    subparser1.add_argument('-o', metavar="out_file",
+                        type=argparse.FileType('w'),
+                        default=sys.stdout,
+                        help='''Выходной файл. Путь допустимо указывать как абсолютный, так и относительный. Если файл лежит в той же директории, что и исполняемый файл, то можно указать только его название''')  # dest="output_file", default='out_file.xlsx',
 
-        # проверка формата для EAV
-        '''
-        print('\n              проверка формата для EAVю. входные параметры:')
-        '''
-
-        input_eav_file_check = cli_class.check_input_file_format_eav(self, self.input_file_full_path)
-        '''
-        print('skip_this_check =',self.grid)
-        print('previous_check_passed =',go_to_next_check)
-        print('current_check_result =',input_eav_file_check)
-        print('previous_output_message =', output_message)
-        '''
-        go_to_next_check, output_message = cli_class.preliminary_single_check(skip_this_check=self.grid, # если формат фходного файла грид - НЕ делаем проверку
-                                                                              previous_check_passed=go_to_next_check,
-                                                                              current_check_result=input_eav_file_check,
-                                                                              previous_output_message=output_message,
-                                                                              negative_output_message=' - входной файл должен содержать два столбца с названиями: GTIN, GS1Attr')
-        '''
-        print('\n              проверка формата для EAV. ВЫХОДНЫЕ параметры:')
-        print('go_to_next_check =',go_to_next_check)
-        print('output_message =', output_message)
-         '''
-        # проверка формата для GRID
-        input_grid_file_check = cli_class.check_input_file_format_grid(self, self.input_file_full_path)
-        '''
-        print('\n              проверка формата для GRID. входные параметры:')
-        print('skip_this_check =', operator.not_(self.grid))
-        print('previous_check_passed=',go_to_next_check)
-        print('current_check_result=', input_grid_file_check)
-        print('previous_output_message=',output_message )
-        '''
-        go_to_next_check, output_message = cli_class.preliminary_single_check(skip_this_check=operator.not_(self.grid),# если формат фходного файла НЕ грид - делаем проверку
-                                                                              previous_check_passed=go_to_next_check,
-                                                                              current_check_result=input_grid_file_check,
-                                                                              previous_output_message=output_message,
-                                                                              negative_output_message=' - столбцы входного файла должны содержать столбец \'GTIN\' и как минимум еще один столбец с произвольным значением GS1AttrId')
-        '''
-        print('\n              проверка формата для GRID. ВЫХОДНЫЕ параметры:')
-        print('go_to_next_check =', go_to_next_check)
-        print('output_message =', output_message)
-        '''
-
-        # проверка расширения  выходного файла ЭТА ПРОВЕРКА  ДОЛЖНА БЫТЬ ПОСЛЕДНЕЙ. ЕЕ НЕЛЬЗЯ СКИПАТЬ!
-        out_file_extension_check = cli_class.check_output_file_extension(self, self.output_file_full_path)
-        '''
-        print('\n              проверка расширения  выходного файла. входные параметры:')
-        print('previous_check_passed=', go_to_next_check)
-        print('current_check_result=', out_file_extension_check)
-        print('previous_output_message=', output_message)
-        '''
-        go_to_next_check, output_message = cli_class.preliminary_single_check(previous_check_passed=go_to_next_check,
-                                                                               current_check_result=out_file_extension_check,
-                                                                               previous_output_message=output_message,
-                                                                               negative_output_message=' - формат выходного файла должен быть .xlsx')
-        '''
-        print('\n              проверка расширения  выходного файла. ВЫХОДНЫЕ параметры:')
-        print('go_to_next_check =', go_to_next_check)
-        print('output_message =', output_message)
-
-        print('Перед финалным принятием решения !!!!!!!!!!!!!!!!!!!!!!!!!!!! ')
-        print('go_to_next_check (КРАЙНИЙ РАЗ) =', go_to_next_check)
-        print('output_message (КРАЙНИЙ РАЗ) =', output_message)
-        '''
-        # TODO здесь продолжить проверки
-
-        # здесь закончились провеерки
-        #########################################################################################
-
-        all_checks_passed = go_to_next_check
-        return all_checks_passed, output_message
+    subparser1.add_argument("-p", "--print", help="print result in current window", action='store_true')  # ,,
+    subparser1.add_argument("-novm", "--no_valueMap", help="отключает запрос в БД для получения valueMap", action='store_true', )
+    subparser1.add_argument("-v", "--verbose", help="отображает процесспарсинга GS1", action='store_true')
+    subparser1.add_argument("-e", "--eav", help="входной файл в EAV формате, т.е. содержит два столбца 'GTIN' и 'GS1Attr'", action='store_true')
+    subparser1.add_argument("-c", "--chunk", help="размер чанка (порции выгрузки)", default=50, type=int)
 
 
 
-    def eav_file_generator(self): # in_file, out_file
-        print('\n' + '-' * 20)
+    subparser2 = subparsers.add_parser('clipboard')
 
-        all_checks_passed, output_message = cli_class.preliminary_check_set(self)
-        if all_checks_passed:
-            print(output_message)
+    subparser2.add_argument('-gtn', '--gtins', nargs='+', help='список gtin через пробел', required=False)
+    subparser2.add_argument('-att', '--attributes', nargs='+', help='список GS1Attr через пробел', required=False)
 
-            input_df = pd.read_excel(self.input_file_full_path, dtype={'GTIN': object})
-            #input_df = input_df.loc[:, ['GTIN', 'GS1Attr']]
+    '''
+    input_file_full_path = args.i.name
+    output_file_full_path = args.o.name
+    printout_result = args.print
+    verbose_result = args.verbose
+    no_valueMap = args.no_valueMap
+    eav = args.eav
+    chunk = args.chunk
+    gtins = args.gtins
+    attributes = args.attributes
+    '''
+    subparser2.set_defaults(func=get_table_from_clipboard)
 
-            gs1_request = gs1_requester(source_df=input_df, get_valueMap=operator.not_(self.no_valueMap), verbose_result = self.verbose_result)
-            if self.grid:
-                output_df = gs1_request.batch_requester(chunk=self.chunk)
-            else:
-                output_df = gs1_request.batch_requester_eav_mode(chunk=self.chunk)
-                #output_df = gs1_request.one_by_one_requester()
-            output_df.to_excel(self.output_file_full_path, sheet_name='sheet_1', index=False)
+    return parser.parse_args()
 
-            if self.printout_result:
-                print('\nтекущий результат:\n{}'.format(output_df.to_string(index=False)))
+def main():
+    args = parse_args()
+    args.func(args)
 
-            print('\nФайл {} записан'.format(self.output_file_full_path))
 
-        else:
-            print('В процессе предварительных проверок обнаружены ошибки:\n')
-            print(output_message)
+
+
+
+
 
 
 if __name__ == "__main__":
     inp = 'data/test_eav_long.xlsx'
     outp = 'data/result.xlsx'
-    args = argparse.Namespace(input_file_full_path=inp, output_file_full_path =outp, printout_result = True,verbose_result = True, no_valueMap = False, grid = False, chunk=1)
+    args = argparse.Namespace(input_file_full_path=inp, output_file_full_path =outp, printout_result = True,verbose_result = True, no_valueMap = False, eav = True, chunk=1)
 
-
-    cli_class.eav_file_generator(args)
 
 
 
