@@ -1,4 +1,4 @@
-from df_creating import one_by_one_requester
+from df_creating import gs1_requester
 import pandas as pd
 pd.options.display.max_colwidth = 150
 import requests
@@ -57,7 +57,20 @@ try:
     input_df = input_df.loc[:,['GTIN', 'GS1Attr']]
 
     full_output_path = output_folder + output_file
-    output_df = one_by_one_requester(source_df=input_df)
+
+##############################################
+
+    gs1_requester_object = gs1_requester(get_valueMap=True, source_df=input_df, verbose_result=True)
+
+    output_df = gs1_requester_object.batch_requester()  # url=url, auth=auth,
+
+
+
+
+
+
+
+
 
     try:
         output_df.to_excel(full_output_path, sheet_name='sheet_1', index = False)

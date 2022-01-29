@@ -21,12 +21,13 @@ database = params['DB_database']
 
 class AtrrValueParesr:
 
-    def __init__(self, XML_parsed_to_dict, errcode, attr_list, global_record=None, get_valueMap=True ):
+    def __init__(self, XML_parsed_to_dict, errcode, attr_list, global_record=None, get_valueMap=True, verbose_result=False):
         self.XML_parsed_to_dict = XML_parsed_to_dict
         self.errcode = errcode
         self.global_record = global_record
         self.attr_list = attr_list
         self.get_valueMap = get_valueMap
+        self.verbose_result = verbose_result
 
 
     def general_parameters(self):
@@ -62,7 +63,8 @@ class AtrrValueParesr:
             df.loc[self.global_record, 'variant'] = np.nan
 
         df = df[['GTIN', 'errorcode', 'variant']].copy()
-        print('GTIN = {}, errorcode = {}, variant = {} '.format(df['GTIN'].to_string(index=False),df['errorcode'].to_string(index=False),df['variant'].to_string(index=False) ))
+        if self.verbose_result:
+            print('GTIN = {}, errorcode = {}, variant = {} '.format(df['GTIN'].to_string(index=False),df['errorcode'].to_string(index=False),df['variant'].to_string(index=False) ))
 
 
         #print('=' * 40)
@@ -492,7 +494,8 @@ if __name__ == '__main__':
     auth = HTTPBasicAuth(login, password)
 
 
-    full_body_test = '''<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:org.gs1ru.gs46.intf">
+    full_body_test = '''
+    <SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ns1="urn:org.gs1ru.gs46.intf">
     	<SOAP-ENV:Body>
     		<ns1:GetItemByGTIN>
     			<ns1:GTIN>4660085970269</ns1:GTIN>

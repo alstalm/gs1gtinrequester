@@ -33,7 +33,7 @@ def combine_gtin_list(GTIN_list):
 
 
 # TODO Добавить дефолтный параметр trytoreaddescr=True - с которым функция будем работать как сейчас, а если False, то вычитывать только value
-def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap):
+def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap, verbose_result):
     '''
     Данная функция принимает на вход из функции get_curent_df распарсенный в ловарь XML и список атрибутов
     1. ВЫзывает парсеры основных параметров, базовых атрибутов и WEB атрибутов
@@ -49,17 +49,18 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap):
         # что-то типа этого: len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])
 
         if isinstance(variant_from_second_redord_for_try, str):  # просто проверяем что есть второй рекорд у которого есть хоть какое-то значение варинта
-            print('tb51: рекордов больше чем 1. успешно прошли try. идем в цикл парсинга нескольких записей \n')
+            #print('tb51: рекордов больше чем 1. успешно прошли try. идем в цикл парсинга нескольких записей \n')
             # если на входе получили несколько рекордов то для каждого рекорда
             for global_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])):
 
-                print('xtdp55: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
+                #print('xtdp55: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
 
                 errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
-
+                parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=global_record, get_valueMap=get_valueMap,
+                                         verbose_result=verbose_result)
                 if int(errcode) != 0:
                     # просто записываем значение errcode и variant и переходим к следующему рекорду
-                    parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record = global_record, get_valueMap = get_valueMap)
+
                     general_parameters_df = parser.general_parameters()
                     current_df = general_parameters_df
 
@@ -67,16 +68,16 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap):
                 else:
 
                     # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
-                    parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=global_record, get_valueMap = get_valueMap)
+
                     general_parameters_df = parser.general_parameters()
                     base_attribute_df = parser.base_attributes_parser()
                     web_attributes_df = parser.web_attribute_parser()
                     TNVED_codes_df = parser.TNVED_codes_parser()
                     # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
-                    print('xtdp75: объединим базовые и web-атрибуты: df= \n')
+                    #print('xtdp75: объединим базовые и web-атрибуты: df= \n')
                     current_df = pd.concat([general_parameters_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
-                    print('tb77: после объединения current_df=\n', current_df.to_string())
-                    print('\n')
+                    #print('tb77: после объединения current_df=\n', current_df.to_string())
+                    #print('\n')
 
                 if len(full_df) < 1:
                     full_df = current_df.copy()
@@ -87,15 +88,15 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap):
     except KeyError:
 
         errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
-
+        parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=None, get_valueMap=get_valueMap, verbose_result=verbose_result)
         if int(errcode) != 0:
             #  просто записываем значение errcode и variant
-            parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=None, get_valueMap = get_valueMap)
+
             general_parameters_df = parser.general_parameters()
             current_df = general_parameters_df
         else:
             # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
-            parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=None, get_valueMap = get_valueMap)
+
             general_parameters_df = parser.general_parameters()
             base_attribute_df = parser.base_attributes_parser()
             web_attributes_df = parser.web_attribute_parser()
@@ -110,7 +111,7 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap):
 
 # TODO Reformat Code (beutify) ALt+CTR+L
 @retry(TimeoutError, tries=5, delay=1, max_delay=180, backoff=3)
-def get_current_df(current_gtin_list, attr_list, url, auth, get_valueMap):
+def get_current_df(current_gtin_list, attr_list, url, auth, get_valueMap,  verbose_result):
     '''
     Данная функция формирует датафрейм по одному запросу.
     1. С использованием функции gtin_list_combiner фомрирует один запрос для запроса в ГС1 по нескольким номерам GTIN.
@@ -139,93 +140,220 @@ def get_current_df(current_gtin_list, attr_list, url, auth, get_valueMap):
     if status_code == 200:
         answer = resp.content
         XML_parsed_to_dict = xmltodict.parse(answer)
-        curent_attr_df = table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap)
+        current_attr_df = table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap, verbose_result)
     else:
 
-        curent_attr_df = pd.DataFrame({'http_code': [status_code]})
+        current_attr_df = pd.DataFrame({'http_code': [status_code]})
 
-    return curent_attr_df
+    return current_attr_df
 
+class gs1_requester:
+    def __init__(self, get_valueMap, source_df, verbose_result):
+        self.get_valueMap = get_valueMap
+        self.source_df = source_df
+        self.verbose_result = verbose_result
 
-def one_by_one_requester(source_df, get_valueMap=True):
-    final_output_df = pd.DataFrame()
-    for i in range(len(source_df)):
-        gtin = source_df.loc[i,'GTIN']
-        gs1attr = source_df.loc[i,'GS1Attr']
-        current_output_df = get_current_df(current_gtin_list= [gtin], attr_list=[gs1attr], url = url, auth= auth, get_valueMap=get_valueMap)
+    def one_by_one_requester(self):
+        final_output_df = pd.DataFrame()
+        for i in range(len(self.source_df)):
+            gtin = self.source_df.loc[i,'GTIN']
+            gs1attr = self.source_df.loc[i,'GS1Attr']
+            current_output_df = get_current_df(current_gtin_list= [gtin], attr_list=[gs1attr], url = url, auth= auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
 
-        # если есть атрибуты, то перевдем в EAV вид
-        cols_list = current_output_df.columns.tolist()
-        if len(cols_list) >3:
-            GS1Attr_name = cols_list[-1]
-            current_output_df.loc[:, 'GS1Attr_name'] = GS1Attr_name
-            current_output_df.loc[:, 'GS1Attr_value'] = current_output_df.loc[:, GS1Attr_name]
-            current_output_df = current_output_df[['GTIN', 'errorcode', 'variant', 'GS1Attr_name', 'GS1Attr_value']].copy()
-        else:
-            pass
-
-        if len(final_output_df) == 0:
-            final_output_df = current_output_df
-        else:
-            final_output_df = pd.concat([final_output_df, current_output_df],axis=0)
-            #print('NV71: final_output_df = ',final_output_df)
-
-    return final_output_df
-
-
-def batch_requester(full_gtin_list, attr_list,  get_valueMap=True, url=url, auth=auth, batch_size=1):
-    """
-    Данная функция суммирует итоговый датафрейм из датафреймов полученных в серии запросов.
-    1. Разбивает список GTIN для запроса батчами (по несколько GTIN за один запрос)
-    2. По каждому запросу вызывает функцию get_curent_df получает датафрейм
-    3. Объединяет запросы в один датафарейм
-
-    GetTable - функция для построения таблицы атрибутов по списку gtin.
-    В качестве аргументов функция принимает артументы: gtin_list, attr_list,
-    где:
-    gtin_list - список gtin в формате ['12345', '2345']
-    attr_list - список атрибутов GS1 в формате [['PROD_COVER_GTIN', 'PROD_REGDATE', 'PUBLICATION_DATE']
-    batch_size - количество одновременно запрашиваемых в GS1 gtin
-    для любого списка атрибутов функция всегда дополнительно возвращает значение варианта карточки товара
-    пример записи функции GetTable(gtin_list = GTIN_list, attr_list = Attributes_list)
-    """
-    full_attr_df = pd.DataFrame()
-
-    if len(full_gtin_list) >= batch_size:
-        rest_of_gtin_list = full_gtin_list
-        while len(rest_of_gtin_list) >= batch_size:
-
-            current_gtin_list = rest_of_gtin_list[:batch_size]
-            rest_of_gtin_list = rest_of_gtin_list[batch_size:]
-
-            try:
-                current_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=get_valueMap)
-                if len(full_attr_df) < 1:
-                    full_attr_df = current_attr_df.copy()
-                else:
-                    full_attr_df = pd.concat([full_attr_df, current_attr_df], axis=0)
-            except:
-
+            # если в XML удалось распарсить атрибуты, то перевдем в EAV вид
+            cols_list = current_output_df.columns.tolist()
+            if len(cols_list) >3:
+                GS1Attr_name = cols_list[-1]
+                current_output_df.loc[:, 'GS1Attr_name'] = GS1Attr_name
+                current_output_df.loc[:, 'GS1Attr_value'] = current_output_df.loc[:, GS1Attr_name]
+                current_output_df = current_output_df[['GTIN', 'errorcode', 'variant', 'GS1Attr_name', 'GS1Attr_value']].copy()
+            else:
                 pass
-        # чтобы не потерять остаток от цикла
 
-        current_attr_df = get_current_df(current_gtin_list=rest_of_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=get_valueMap)
-        full_attr_df = pd.concat([full_attr_df, current_attr_df], axis=0)
+            if len(final_output_df) == 0:
+                final_output_df = current_output_df
+            else:
+                final_output_df = pd.concat([final_output_df, current_output_df],axis=0)
+                #print('NV71: final_output_df = ',final_output_df)
 
-        # добавим остаток от последнего gtin_listб т.к. он не обрабатывается в цикле while
-        # curent_gtin_list = gtin_list
-        # current_attr_df = get_curent_df(curent_gtin_list=curent_gtin_list, attr_list=attr_list, url=url, auth=auth)
-        # full_attr_df = pd.concat([full_attr_df, current_attr_df], axis = 0)
-
-
-    else:
-        current_gtin_list = full_gtin_list
-
-        full_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=get_valueMap)
+        return final_output_df
 
 
 
-    return full_attr_df
+    def batch_requester(self, chunk=1): #url=url, auth=auth,
+        """
+        Данная функция суммирует итоговый датафрейм из датафреймов полученных в серии запросов.
+        1. Разбивает список GTIN для запроса батчами (по несколько GTIN за один запрос)
+        2. По каждому запросу вызывает функцию get_curent_df получает датафрейм
+        3. Объединяет запросы в один датафарейм
+
+        GetTable - функция для построения таблицы атрибутов по списку gtin.
+        В качестве аргументов функция принимает артументы: gtin_list, attr_list,
+        где:
+        gtin_list - список gtin в формате ['12345', '2345']
+        attr_list - список атрибутов GS1 в формате [['PROD_COVER_GTIN', 'PROD_REGDATE', 'PUBLICATION_DATE']
+        batch_size - количество одновременно запрашиваемых в GS1 gtin
+        для любого списка атрибутов функция всегда дополнительно возвращает значение варианта карточки товара
+        пример записи функции GetTable(gtin_list = GTIN_list, attr_list = Attributes_list)
+        """
+
+        full_gtin_list = self.source_df['GTIN'].values.tolist()
+        attr_list = self.source_df.columns.values.tolist()
+        attr_list.remove('GTIN')
+
+        full_attr_df = pd.DataFrame()
+
+        if len(full_gtin_list) >= chunk:
+            rest_of_gtin_list = full_gtin_list
+            while len(rest_of_gtin_list) >= chunk:
+
+                current_gtin_list = rest_of_gtin_list[:chunk]
+                rest_of_gtin_list = rest_of_gtin_list[chunk:]
+
+                try:
+                    current_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
+                    if len(full_attr_df) < 1:
+                        full_attr_df = current_attr_df.copy()
+                    else:
+                        full_attr_df = pd.concat([full_attr_df, current_attr_df], axis=0)
+                except:
+
+                    pass
+            # если есть остаток, то чтобы не потерять его запросим последний раз
+            if len(rest_of_gtin_list) > 0:
+                current_attr_df = get_current_df(current_gtin_list=rest_of_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
+                full_attr_df = pd.concat([full_attr_df, current_attr_df], axis=0)
+
+        else:
+            current_gtin_list = full_gtin_list
+
+            full_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
+
+        return full_attr_df
+
+    # функция перевода текущеей распарсенной гри-таблицы в eav вариант
+    @staticmethod
+    def grid_to_eav(one_chunk_parsed_grid_df, one_chunk_initial_eav_df):
+        cols_list = one_chunk_parsed_grid_df.columns.tolist()
+        print('\ndfc238: функция grid_to_eav получила на вход грид one_chunk_parsed_grid_df=\n', one_chunk_parsed_grid_df)
+        print('\ndfc239: функция grid_to_eav получила на вход input_for_eav_df=\n', one_chunk_initial_eav_df)
+        if len(cols_list) > 3:
+            current_output_df = one_chunk_parsed_grid_df.copy()
+            current_gs1attrs_list = current_output_df.columns.values.tolist()
+
+            #print('\ndfc242: current_gs1attrs_list',current_gs1attrs_list)
+
+            # названия столбцов перенесем в строки (из широкой таблицы сделаем длинную)
+            # переименуем результат
+            # удалим дубли
+            transformed_to_long_table_current_output_df = pd.melt(current_output_df, id_vars=['GTIN', 'errorcode', 'variant'], value_vars=current_gs1attrs_list[3:])\
+                .rename(columns={'variable': 'GS1Attr_name', 'value': 'GS1Attr_value'})\
+                .drop_duplicates()
+
+            #print('\ndfc250: transformed_to_long_table_current_output_df=\n', transformed_to_long_table_current_output_df)
+            #print('\ndfc251: input_for_eav_df=\n', input_for_eav_df)
+            #print('\ndfc252: dtypes of input_for_eav_df =\n', input_for_eav_df.dtypes)
+            #print('\ndfc253: dtypes of transformed_to_long_table_current_output_df =\n', transformed_to_long_table_current_output_df.dtypes)
+
+            one_chunk_initial_eav_df.GTIN = one_chunk_initial_eav_df.GTIN.astype(str)
+            one_chunk_initial_eav_df.GS1Attr_name = one_chunk_initial_eav_df.GS1Attr_name.astype(str)
+            transformed_to_long_table_current_output_df.GTIN = transformed_to_long_table_current_output_df.GTIN.astype(str)
+            transformed_to_long_table_current_output_df.GS1Attr_name = transformed_to_long_table_current_output_df.GS1Attr_name.astype(str)
+
+            print('\ndfc 263: исходный грид. трансформированный в длинну: transformed_to_long_table_current_output_df\n', transformed_to_long_table_current_output_df.to_string())
+            joined_df = pd.merge(one_chunk_initial_eav_df, transformed_to_long_table_current_output_df, on=['GTIN', 'GS1Attr_name'])
+
+            print('\ndfc 266: смердженный результат: joined_df\n', joined_df.to_string())
+            #print('\ndfc252: joined_df=\n',joined_df)
+            current_output_df = joined_df[['GTIN', 'errorcode', 'variant', 'GS1Attr_name', 'GS1Attr_value']].copy()
+            #print('\ndfc254: current_output_df=\n', current_output_df)
+        else:
+            current_output_df =one_chunk_parsed_grid_df
+        return current_output_df
+
+    def batch_requester_eav_mode(self, chunk=1): #url=url, auth=auth,
+        """
+        Данная функция суммирует итоговый датафрейм из датафреймов полученных в серии запросов.
+        1. Разбивает список GTIN для запроса батчами (по несколько GTIN за один запрос)
+        2. По каждому запросу вызывает функцию get_curent_df получает датафрейм
+        3. Объединяет запросы в один датафарейм
+
+        GetTable - функция для построения таблицы атрибутов по списку gtin.
+        В качестве аргументов функция принимает артументы: gtin_list, attr_list,
+        где:
+        gtin_list - список gtin в формате ['12345', '2345']
+        attr_list - список атрибутов GS1 в формате [['PROD_COVER_GTIN', 'PROD_REGDATE', 'PUBLICATION_DATE']
+        batch_size - количество одновременно запрашиваемых в GS1 gtin
+        для любого списка атрибутов функция всегда дополнительно возвращает значение варианта карточки товара
+        пример записи функции GetTable(gtin_list = GTIN_list, attr_list = Attributes_list)
+        """
+        ############################# НОВЫЙ КУСОК НАЧАЛСЯ
+        full_gtin_list = self.source_df.loc[:, 'GTIN'].values.tolist()
+        full_attr_list = self.source_df.loc[:, 'GS1Attr'].values.tolist()
+
+
+        ############################# НОВЫЙ КУСОК ЗАКОНЧИЛСЯ
+
+
+        output_eav_df = pd.DataFrame()
+
+        if len(self.source_df) >= chunk:
+            #rest_of_gtin_list = full_gtin_list # так было
+            #rest_of_attr_list = full_attr_list # так было
+            rest_of_eav_df = self.source_df
+            while len(rest_of_eav_df) >= chunk:
+
+                current_eav_df = rest_of_eav_df[:chunk]
+                rest_of_eav_df = rest_of_eav_df[chunk:]
+
+
+                current_gtin_list = current_eav_df['GTIN'] # подается на вход get_current_df()
+                rest_of_gtin_list = rest_of_eav_df['GTIN'] # остаток. проверяется после прохождения цикла и если выполняется условия - подается на вход get_current_df()
+
+                current_attr_list = current_eav_df['GS1Attr'] # подается на вход get_current_df()
+                rest_of_attr_list = rest_of_eav_df['GS1Attr'] # остаток. проверяется после прохождения цикла и если выполняется условия - подается на вход get_current_df()
+
+
+                try:
+                    current_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=list(set(current_attr_list)), url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
+                    print('\nпреобразуем текущий чанк в EAV\n')
+                    current_ready_chunk_of_eav_df = gs1_requester.grid_to_eav(one_chunk_parsed_grid_df=current_attr_df, one_chunk_initial_eav_df=current_eav_df.rename(columns={'GS1Attr': 'GS1Attr_name'}))
+
+                    # вариант 1. можно здесь преобразовать полученый грид. и в input_for_eav_df подать current_eav_df
+                    if len(output_eav_df) < 1:
+                        output_eav_df = current_ready_chunk_of_eav_df.copy()
+                    else:
+                        output_eav_df = pd.concat([output_eav_df, current_ready_chunk_of_eav_df], axis=0)
+                except:
+
+                    pass
+            # если есть остаток, то чтобы не потерять его запросим последний раз
+            if len(rest_of_eav_df) > 0:
+
+                current_attr_df = get_current_df(current_gtin_list=rest_of_gtin_list, attr_list=list(set(rest_of_attr_list)), url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
+                # вариант 1. тогда здесь тоже надо преобразовать полученый грид. и в input_for_eav_df подать current_eav_df
+                current_ready_chunk_of_eav_df = gs1_requester.grid_to_eav(one_chunk_parsed_grid_df=current_attr_df, one_chunk_initial_eav_df=rest_of_eav_df.rename(columns={'GS1Attr': 'GS1Attr_name'}))
+                output_eav_df = pd.concat([output_eav_df, current_ready_chunk_of_eav_df], axis=0)
+                # в ариант1. .. и переименовать full_attr_df в output_eav_df
+        else:
+            current_gtin_list = full_gtin_list
+            current_attr_list = full_attr_list
+            print('\ndfc314: current_gtin_list:\n', current_gtin_list)
+            print('\ndfc315: current_attr_list\n',current_attr_list)
+
+            full_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=current_attr_list, url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
+            print('\ndfc318: full_attr_df =\n', full_attr_df.to_string())
+
+            output_eav_df = gs1_requester.grid_to_eav(one_chunk_parsed_grid_df= full_attr_df, one_chunk_initial_eav_df=self.source_df.rename(columns={'GS1Attr': 'GS1Attr_name'}))
+            print('\ndfc321: output_eav_df =\n',output_eav_df )
+
+
+
+
+        return output_eav_df
+
+
+
 
 
 

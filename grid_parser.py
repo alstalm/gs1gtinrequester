@@ -1,5 +1,5 @@
 # Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-from df_creating import batch_requester
+from df_creating import gs1_requester
 import pandas as pd
 pd.options.display.max_colwidth = 150
 import requests
@@ -32,6 +32,10 @@ output_file = params['output_file']
 ''' ЗАДАИМ СПИСОК АТРИБУТОВ'''
 Attributes_list = params['Attributes_list']
 
+input_folder_for_grid = params['input_folder_for_grid']
+input_file_for_grid= params['input_file_for_grid']
+full_input_path_for_grid = input_folder_for_grid + input_file_for_grid
+
 
 ''' соберем авторизацию'''
 auth = HTTPBasicAuth(login, password)
@@ -48,7 +52,11 @@ full_output_path = output_folder + output_file
 
 ''' сделаем запрос в ГС1'''
 #GTIN_list = ['4601075342390', '4601075342420']
-df = batch_requester(url=url, auth=auth, full_gtin_list=GTIN_list, attr_list=Attributes_list, batch_size=50)
+in_df = pd.read_excel(full_input_path_for_grid)
+print(in_df.to_string())
+gs1_requester_object = gs1_requester(get_valueMap=True, source_df=in_df, verbose_result=True)
+
+df = gs1_requester_object.batch_requester(chunk=50) #url=url, auth=auth,
 
 #print(df)
 ''' выгрузим в эксель'''
