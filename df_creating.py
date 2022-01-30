@@ -148,6 +148,8 @@ class gs1_requester:
         self.source_df = source_df
         self.verbose_result = verbose_result
 
+    # оставим данный метод для тестирования на всякий случай
+    '''
     def one_by_one_requester(self):
         final_output_df = pd.DataFrame()
         for i in range(len(self.source_df)):
@@ -171,7 +173,7 @@ class gs1_requester:
                 final_output_df = pd.concat([final_output_df, current_output_df],axis=0)
 
         return final_output_df
-
+    '''
 
 
     def batch_requester(self, chunk=1): #url=url, auth=auth,
@@ -287,7 +289,6 @@ class gs1_requester:
 
                 try:
                     current_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=list(set(current_attr_list)), url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
-
                     current_ready_chunk_of_eav_df = gs1_requester.grid_to_eav(one_chunk_parsed_grid_df=current_attr_df, one_chunk_initial_eav_df=current_eav_df.rename(columns={'GS1Attr': 'GS1Attr_name'}))
 
                     if len(output_eav_df) < 1:
