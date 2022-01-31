@@ -11,12 +11,7 @@ from  argparse import RawDescriptionHelpFormatter
 import operator
 import textwrap
 import textwrap as _textwrap
-'''
-class LineWrapRawTextHelpFormatter(argparse.RawDescriptionHelpFormatter):
-    def _split_lines(self, text, width):
-        text = self._whitespace_matcher.sub(' ', text).strip()
-        return _textwrap.wrap(text, width)
-'''
+
 
 general_description = '''Утилита парсинга ГС1. Делает запрос по методу GetItemByGTIN.
         --------------------------------------------------------------------------
@@ -28,8 +23,8 @@ general_description = '''Утилита парсинга ГС1. Делает з�
     так и относительный. Например ..\\test_out.xlsx (для записи в директорию выше уровнем),
     или test\\test_out.xlsx (для записи в директорию ниже уровнем, или test_out.xlsx (для записи в ту же директорию, где лежит исполняемы скрипт'''
 
-'''
-@staticmethod
+
+
 def test_db_connection():
     # TODO добавить Tкy Except
     try:
@@ -40,7 +35,7 @@ def test_db_connection():
     return status, message
 
 
-def check_output_file_extension(self, output_file_full_path):
+def check_output_file_extension(output_file_full_path):
     extension = str(output_file_full_path[(len(output_file_full_path) - 5):])
     if extension == '.xlsx':
         current_function_result = True
@@ -49,10 +44,9 @@ def check_output_file_extension(self, output_file_full_path):
     return current_function_result
 
 
-def check_input_file_format_eav(self, input_file_full_path):
+def check_input_file_format_eav(input_file_full_path):
     input_df = pd.read_excel(input_file_full_path)
     header_list = list(input_df.columns.values)
-    print('header_list =', header_list)
     needed_columns = ['GTIN', 'GS1Attr']
     if header_list == needed_columns:
         current_function_result = True
@@ -61,7 +55,7 @@ def check_input_file_format_eav(self, input_file_full_path):
     return current_function_result
 
 
-def check_input_file_format_grid(self, input_file_full_path):
+def check_input_file_format_grid(input_file_full_path):
     input_df = pd.read_excel(input_file_full_path)
     try:
         full_gtin_list = input_df['GTIN'].values.tolist()
@@ -79,7 +73,7 @@ def check_input_file_format_grid(self, input_file_full_path):
     return current_function_result
 
 
-def check_chunk(self, chunk):
+def check_chunk(chunk):
     if int(chunk) > 50:
         current_function_result = False
     else:
@@ -87,7 +81,6 @@ def check_chunk(self, chunk):
     return current_function_result
 
 
-@staticmethod
 def preliminary_single_check(current_check_result, negative_output_message, previous_check_passed=True, previous_output_message='', skip_this_check=False):
     positive_output_message = 'Все предварительные проверки пройдены. Начался парсинг GS1 \n'
     if skip_this_check == True and previous_check_passed == False:
@@ -108,39 +101,46 @@ def preliminary_single_check(current_check_result, negative_output_message, prev
     return go_to_next_check, output_message
 
 
-def preliminary_check_set(self):
+def preliminary_check_set(args):
+
+    input_file_full_path = args.i.name
+    output_file_full_path = args.o.name
+    eav = args.eav
+    no_valueMap = args.no_valueMap
+    chunk = args.chunk
+
     # проерка соединения
-    is_connected_to_database, connection_message = cli_class.test_db_connection()
-    go_to_next_check, output_message = cli_class.preliminary_single_check(skip_this_check=self.no_valueMap,
+    is_connected_to_database, connection_message = test_db_connection()
+    go_to_next_check, output_message = preliminary_single_check(skip_this_check=no_valueMap,
                                                                           current_check_result=is_connected_to_database,
                                                                           negative_output_message=' - ' + connection_message)
 
     # проверка формата для EAV
-    input_eav_file_check = cli_class.check_input_file_format_eav(self, self.input_file_full_path)
-    go_to_next_check, output_message = cli_class.preliminary_single_check(skip_this_check=operator.not_(self.eav),  # если формат входного файла EAV - то НЕ пропускаем проверку
+    input_eav_file_check = check_input_file_format_eav(input_file_full_path)
+    go_to_next_check, output_message = preliminary_single_check(skip_this_check=operator.not_(eav),  # если формат входного файла EAV - то НЕ пропускаем проверку
                                                                           previous_check_passed=go_to_next_check,
                                                                           current_check_result=input_eav_file_check,
                                                                           previous_output_message=output_message,
                                                                           negative_output_message=' - входной файл должен содержать два столбца с названиями: GTIN, GS1Attr')
 
     # проверка формата для GRID
-    input_grid_file_check = cli_class.check_input_file_format_grid(self, self.input_file_full_path)
-    go_to_next_check, output_message = cli_class.preliminary_single_check(skip_this_check=self.eav,  # если формат входного файла EAV -  проверку ПРОПУСКАЕМ
+    input_grid_file_check = check_input_file_format_grid(input_file_full_path)
+    go_to_next_check, output_message = preliminary_single_check(skip_this_check=eav,  # если формат входного файла EAV -  проверку ПРОПУСКАЕМ
                                                                           previous_check_passed=go_to_next_check,
                                                                           current_check_result=input_grid_file_check,
                                                                           previous_output_message=output_message,
                                                                           negative_output_message=' - столбцы входного файла должны содержать столбец \'GTIN\' и как минимум еще один столбец с произвольным значением GS1AttrId')
 
     # проверка что chunk <= 50
-    chunk_less_or_equal_50 = cli_class.check_chunk(self, self.chunk)
-    go_to_next_check, output_message = cli_class.preliminary_single_check(previous_check_passed=go_to_next_check,
+    chunk_less_or_equal_50 = check_chunk(chunk)
+    go_to_next_check, output_message = preliminary_single_check(previous_check_passed=go_to_next_check,
                                                                           current_check_result=chunk_less_or_equal_50,
                                                                           previous_output_message=output_message,
                                                                           negative_output_message='значение chunk не должно превышать 50')
 
     # проверка расширения  выходного файла ЭТА ПРОВЕРКА  ДОЛЖНА БЫТЬ ПОСЛЕДНЕЙ. ЕЕ НЕЛЬЗЯ СКИПАТЬ!
-    out_file_extension_check = cli_class.check_output_file_extension(self, self.output_file_full_path)
-    go_to_next_check, output_message = cli_class.preliminary_single_check(previous_check_passed=go_to_next_check,
+    out_file_extension_check = check_output_file_extension(output_file_full_path)
+    go_to_next_check, output_message = preliminary_single_check(previous_check_passed=go_to_next_check,
                                                                           current_check_result=out_file_extension_check,
                                                                           previous_output_message=output_message,
                                                                           negative_output_message=' - формат выходного файла должен быть .xlsx')
@@ -152,7 +152,7 @@ def preliminary_check_set(self):
 
     all_checks_passed = go_to_next_check
     return all_checks_passed, output_message
-'''
+
 
 def get_table_from_clipboard(args):
     gtins = args.gtins
@@ -161,44 +161,53 @@ def get_table_from_clipboard(args):
     verbose = args.verbose
     chunk = args.chunk
 
-    #print('gtins = ->{}<- and type = {}'.format(gtins, type(gtins)))
-    #print('attributes = ->{}<- and type = {}'.format(attributes, type(attributes)))
-    #print('verbose_result =',verbose_result)
+    all_checks_passed, output_message = preliminary_check_set(args)  ###################################################################################################################
+    print('', )
+    if all_checks_passed:
+        print(output_message)
 
+        input_df = pd.DataFrame(columns=attributes)
+        input_df['GTIN']=gtins
+        gs1_request = gs1_requester(source_df=input_df, get_valueMap=operator.not_(no_valueMap), verbose_result=verbose)
+        output_df = gs1_request.batch_requester(chunk=chunk)
+        print('\nтекущий результат:\n{}'.format(output_df.to_string(index=False)))
 
-    input_df = pd.DataFrame(columns=attributes)
-    input_df['GTIN']=gtins
-    gs1_request = gs1_requester(source_df=input_df, get_valueMap=operator.not_(no_valueMap), verbose_result=verbose)
-    output_df = gs1_request.batch_requester(chunk=chunk)
-    print('\nтекущий результат:\n{}'.format(output_df.to_string(index=False)))
+    else:
+        print('В процессе предварительных проверок обнаружены ошибки:\n')
+        print(output_message)
 
 
 def get_table_from_file(args): # in_file, out_file
-    print('\n' + '-' * 20)
-    input_file_full_path = args.i.name
-    output_file_full_path = args.o.name
-    eav = args.eav
-    no_valueMap = args.no_valueMap
-    verbose_result = args.verbose
-    chunk = args.chunk
-    printout_result = args.print
+    all_checks_passed, output_message = preliminary_check_set(args)  ###################################################################################################################
+    print('', )
+    if all_checks_passed:
+        print(output_message)
+        print('\n' + '-' * 20)
+        input_file_full_path = args.i.name
+        output_file_full_path = args.o.name
+        eav = args.eav
+        no_valueMap = args.no_valueMap
+        verbose_result = args.verbose
+        chunk = args.chunk
+        printout_result = args.print
 
+        input_df = pd.read_excel(input_file_full_path, dtype={'GTIN': object})
+        gs1_request = gs1_requester(source_df=input_df, get_valueMap=operator.not_(no_valueMap), verbose_result=verbose_result)
 
-    input_df = pd.read_excel(input_file_full_path, dtype={'GTIN': object})
-    gs1_request = gs1_requester(source_df=input_df, get_valueMap=operator.not_(no_valueMap), verbose_result=verbose_result)
+        if eav:
+            output_df = gs1_request.batch_requester_eav_mode(chunk=chunk)
+        else:
+            output_df = gs1_request.batch_requester(chunk=chunk)
+        output_df.to_excel(output_file_full_path, sheet_name='sheet_1', index=False)
 
-    if eav:
-        output_df = gs1_request.batch_requester_eav_mode(chunk=chunk)
+        if printout_result:
+            print('\nтекущий результат:\n{}'.format(output_df.to_string(index=False)))
+
+        print('\nФайл {} записан'.format(output_file_full_path))
 
     else:
-        output_df = gs1_request.batch_requester(chunk=chunk)
-
-    output_df.to_excel(output_file_full_path, sheet_name='sheet_1', index=False)
-
-    if printout_result:
-        print('\nтекущий результат:\n{}'.format(output_df.to_string(index=False)))
-
-    print('\nФайл {} записан'.format(output_file_full_path))
+        print('В процессе предварительных проверок обнаружены ошибки:\n')
+        print(output_message)
 
 
 def parse_args():
