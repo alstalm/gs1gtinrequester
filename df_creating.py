@@ -28,7 +28,6 @@ def combine_gtin_list(GTIN_list):
     for gtin in GTIN_list:
         row = '<ns1:GTIN>' + str(gtin) + '</ns1:GTIN>'
         row_set = row_set + row
-
     return row_set
 
 

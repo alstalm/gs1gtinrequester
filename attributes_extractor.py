@@ -29,7 +29,6 @@ class AtrrValueParesr:
         self.get_valueMap = get_valueMap
         self.verbose_result = verbose_result
 
-
     def general_parameters(self):
         '''
         Данная функция вызывается из table_from_dict_builder и парсит из переданного словаря ОСНВНЫЕ параметры рекорда (карточки).
@@ -71,7 +70,6 @@ class AtrrValueParesr:
 
         return df
 
-
     def base_attributes_parser(self):
         '''
         Данная функция вызывается из table_from_dict_builder и парсит из переданного словаря БАЗОВЫЕ атрибуты.
@@ -104,7 +102,6 @@ class AtrrValueParesr:
                 #print('bap35: attrName {} не в списке искомых атрибутов'.format(attrName))
                 pass
         return df
-
 
     def TNVED_codes_parser(self):
         #print('\n++++++++++++++++ ПАРСИНГ ТНВЭДов ++++++++++++++++\n')
@@ -208,7 +205,6 @@ class AtrrValueParesr:
 
         return df
 
-
     @staticmethod
     @retry(TimeoutError, tries=3, delay=3, max_delay=10, backoff=3)
     
@@ -284,7 +280,6 @@ class AtrrValueParesr:
                 #print('attfmap 66: на выход функции отдаем mapping_value=', mapping_value)
                 pass
         return cash, mapping_value
-
 
     def web_attribute_parser(self):
         '''
@@ -476,9 +471,6 @@ class AtrrValueParesr:
                 pass
 
         return df
-
-
-
 
 
 
