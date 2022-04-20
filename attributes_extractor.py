@@ -239,8 +239,6 @@ class AtrrValueParesr:
                 DBresponse = cur.fetchone()
             return  DBresponse
 
-
-
         if get_valueMap == False:
             mapping_value = mapping_key
 
@@ -301,7 +299,6 @@ class AtrrValueParesr:
         cash = {}
 
         df = pd.DataFrame()
-        #print('\n++++++++++++++++ ПАРСИНГ WEB-АТРИБУТОВ ++++++++++++++++\n')
         for infotype_record in range(len(common_part['InfoTypeRecords']['record'])):
             try:  # если в infotype_record есть AttributeValues и это или список или словарь
                 if isinstance(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'], list):  # если в InfoTypeRecords/record/AttributeValues несколько value
@@ -378,12 +375,12 @@ class AtrrValueParesr:
                                 # print('wap93: текущее значение df= \n {}\n'.format(df))
                                 # except:
                                 #    print('wap92: в infotype_record N={} в /AttributeValues в записи  value N={} для web_attr_id {} что-то НЕОЖИДАННОЕ'.format(infotype_record, value_number, web_attr_id))
-                        except:  #
+                        except:  #attext252:
                             print('wap107: в infotype_record N={} в /AttributeValues в записи  value N={} что-то НЕОЖИДАННОЕ'.format(infotype_record, value_number))
 
                 if isinstance(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'], dict):  # если только одна запись value в AttributeValues
-                    # print('wap100: в infotype_record N={} в AttributeValues/value только одна запись value.'.format(infotype_record))
-                    try:  # проверяем если мультиатрибут один
+                    #print('wap100: в infotype_record N={} в AttributeValues/value только одна запись value.'.format(infotype_record))
+                    try:  # проверяем наличие мультиатрибутов. оди или несколько
                         if isinstance(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue']['@extAttrId'], str) \
                                 or isinstance(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue'][0]['@extAttrId'], str):
                             # print('wap104: в записи infotype_record N={} в /AttributeValues в единственной записи value есть одна или несколько MultValue'.format(infotype_record))
@@ -428,12 +425,13 @@ class AtrrValueParesr:
                                     #        print('wap150: текущее значение df= \n {}\n'.format(df))
 
                                     # except KeyError:
-                                    web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue'][MultValue_N]['@value']
-                                    #print('wap156: вызовем get_mapping_value')
-                                    cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
+
                                     if web_attr_id not in self.attr_list:
                                         continue
                                     else:
+                                        web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['ns0:MultValue'][MultValue_N]['@value']
+                                        # print('wap156: вызовем get_mapping_value')
+                                        cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                                         multiattrlist.append(mapping_value)
 
                                         #print('wap150: текущее значение df= \n {}\n'.format(df))
@@ -453,13 +451,14 @@ class AtrrValueParesr:
                         #        print('wap173: текущее значение df= \n {}\n'.format(df))
 
                         # except KeyError:
-                        web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@value']
-                        #print('wap181: вызовем get_mapping_value')
-                        cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
+
                         if web_attr_id not in self.attr_list:
                             #print('wap170: web_attr_id {} не в web_attr_list'.format(web_attr_id))
                             pass
                         else:
+                            web_attr_value = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value']['@value']
+                            # print('wap181: вызовем get_mapping_value')
+                            cash, mapping_value = AtrrValueParesr.get_value_from_valueMap(cash, gs1_attrid=web_attr_id, mapping_key=web_attr_value, get_valueMap=self.get_valueMap)
                             df.loc[self.global_record, web_attr_id] = mapping_value
 
                             # print('wap174: текущее значение df= \n {}\n'.format(df))

@@ -52,6 +52,7 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap, verbose
                 #print('xtdp55: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
 
                 errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
+                print('dfc55: get_valueMap=', get_valueMap)
                 parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=global_record, get_valueMap=get_valueMap,
                                          verbose_result=verbose_result)
                 if int(errcode) != 0:
@@ -206,6 +207,7 @@ class gs1_requester:
                 rest_of_gtin_list = rest_of_gtin_list[chunk:]
 
                 try:
+                    print('dfc209: self.get_valueMap =', self.get_valueMap)
                     current_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
                     if len(full_attr_df) < 1:
                         full_attr_df = current_attr_df.copy()
