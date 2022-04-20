@@ -1,7 +1,6 @@
 import pandas as pd
 from df_creating import gs1_requester
 from attributes_extractor import AtrrValueParesr
-import sys
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 # ОТКЛЮЧАЕТ ВОРНИНГИ НО ВОЗМОЖНО ЗАМЕДЛЯЕТ
@@ -9,8 +8,6 @@ requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 import argparse
 from  argparse import RawDescriptionHelpFormatter
 import operator
-import textwrap
-import textwrap as _textwrap
 
 
 general_description = '''
@@ -202,7 +199,6 @@ def get_table_from_clipboard(args):
         print('В процессе предварительных проверок обнаружены ошибки:\n')
         print(output_message)
 
-
 def get_table_from_file(args): # in_file, out_file
     all_checks_passed, output_message = preliminary_check_set(args)  ###################################################################################################################
     print('', )
@@ -279,8 +275,6 @@ def parse_args():
 def main():
     args = parse_args()
     args.func(args)
-
-
 
 # ЭТОТ ФРАГМЕНТ ДЛЯ ОТЛАДКИ get_table_from_clipboard
 if __name__ == "__main__":

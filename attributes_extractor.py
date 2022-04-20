@@ -7,7 +7,6 @@ import xmltodict
 import pymysql
 from retry import retry
 
-
 with open ('params.yaml', 'r', encoding='UTF-8') as f:
     params = yaml.safe_load(f)
 
@@ -16,8 +15,6 @@ user = params['DB_user']
 port = params['DB_port']
 password = params['DB_password']
 database = params['DB_database']
-
-
 
 class AtrrValueParesr:
 

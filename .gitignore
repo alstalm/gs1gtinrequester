@@ -1,2 +1,5 @@
 # Default ignored files
 params.yaml
+/dist
+/data
+/build

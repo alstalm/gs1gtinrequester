@@ -16,7 +16,6 @@ login = params['login']
 password = params['password']
 auth = HTTPBasicAuth(login, password)
 
-
 def combine_gtin_list(GTIN_list):
     '''
     gtin_list_combiner - возвращает строку для дальнейшей вставки в XML для аформирования ОДНОГО запроса из более чем одного GTIN
