@@ -302,7 +302,7 @@ class AtrrValueParesr:
                     # print('wap28: в infotype_record N={} в /AttributeValues содержится несколько записей value'.format(infotype_record)) # !!!!!!!!!!!!
                     print(f'в  infotype_record = {infotype_record} есть список. будем парсить')
                     for value_number in range(len(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'])):
-                        print(f'305: в цикле берем {value_number} ')
+                        
                         try:  # проверяем если есть вложенный МУЛЬТИАТРИБУТ
                             if isinstance(common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue']['@extAttrId'], str):
                                 web_attr_id = common_part['InfoTypeRecords']['record'][infotype_record]['AttributeValues']['value'][value_number]['ns0:MultValue']['@extAttrId']
