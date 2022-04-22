@@ -39,48 +39,51 @@ def table_from_dict_builder(XML_parsed_to_dict, attr_list, get_valueMap, verbose
 
     full_df = pd.DataFrame()
     # в случае, если в XML БОЛЬШЕ ЧЕМ  один рекорд
-    try:
-        variant_from_second_redord_for_try = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][1]['@variant']
-        # TODO здесь надо заменить на вычисление длинны списка вместо попытки распарсить значение @variant для второго рекорда
+
+    if type(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']) == list:
+
+        #variant_from_second_redord_for_try = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][1]['@variant']
+        # TODO СКОРРЕКТИРОВАНО на вычисление длинны списка вместо попытки распарсить значение @variant для второго рекорда
         # что-то типа этого: len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])
 
-        if isinstance(variant_from_second_redord_for_try, str):  # просто проверяем что есть второй рекорд у которого есть хоть какое-то значение варинта
+        #if isinstance(variant_from_second_redord_for_try, str):  # просто проверяем что есть второй рекорд у которого есть хоть какое-то значение варианта
             # если на входе получили несколько рекордов то для каждого рекорда
-            for global_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])):
+        for global_record in range(len(XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'])):
 
-                #print('xtdp55: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
+            #print('xtdp55: \n                          ==============  вошли в цикл парсинга записи № {} ============== \n'.format(global_record))
 
-                errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
-                print('dfc55: get_valueMap=', get_valueMap)
-                parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=global_record, get_valueMap=get_valueMap,
-                                         verbose_result=verbose_result)
-                if int(errcode) != 0:
-                    # просто записываем значение errcode и variant и переходим к следующему рекорду
+            errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record'][global_record]['result']['@errCode']
 
-                    general_parameters_df = parser.general_parameters()
-                    current_df = general_parameters_df
+            parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=global_record, get_valueMap=get_valueMap,
+                                     verbose_result=verbose_result)
+            if int(errcode) != 0:
 
-                # иначе, (если errorCode = 0)
-                else:
+                # просто записываем значение errcode и variant и переходим к следующему рекорду
 
-                    # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
+                general_parameters_df = parser.general_parameters()
+                current_df = general_parameters_df
 
-                    general_parameters_df = parser.general_parameters()
-                    base_attribute_df = parser.base_attributes_parser()
-                    web_attributes_df = parser.web_attribute_parser()
-                    TNVED_codes_df = parser.TNVED_codes_parser()
-                    # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
-                    current_df = pd.concat([general_parameters_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
+            # иначе, (если errorCode = 0)
+            else:
+
+                # запишем в текущий датафрейм основные параметры рекорда (errCode, variant etc)
+
+                general_parameters_df = parser.general_parameters()
+                base_attribute_df = parser.base_attributes_parser()
+                web_attributes_df = parser.web_attribute_parser()
+                TNVED_codes_df = parser.TNVED_codes_parser()
+                # сконкатинируем по горизонтали датафрейм базовых атрибутов и web-атрибутов
+                current_df = pd.concat([general_parameters_df, base_attribute_df, web_attributes_df, TNVED_codes_df], axis=1)
 
 
-                if len(full_df) < 1:
-                    full_df = current_df.copy()
-                else:
-                    full_df = pd.concat([full_df, current_df], axis=0)
+            if len(full_df) < 1:
+                full_df = current_df.copy()
+            else:
+                full_df = pd.concat([full_df, current_df], axis=0)
 
     # в случае, если в XML только один рекорд
-    except KeyError:
-
+    else:
+        print('глобал-рекордов всего один.')
         errcode = XML_parsed_to_dict['S:Envelope']['S:Body']['ns0:GetItemByGTINResponse']['ns0:GS46Item']['DataRecord']['record']['result']['@errCode']
         parser = AtrrValueParesr(XML_parsed_to_dict=XML_parsed_to_dict, attr_list=attr_list, errcode=errcode, global_record=None, get_valueMap=get_valueMap, verbose_result=verbose_result)
         if int(errcode) != 0:
@@ -206,7 +209,7 @@ class gs1_requester:
                 rest_of_gtin_list = rest_of_gtin_list[chunk:]
 
                 try:
-                    print('dfc209: self.get_valueMap =', self.get_valueMap)
+
                     current_attr_df = get_current_df(current_gtin_list=current_gtin_list, attr_list=attr_list, url=url, auth=auth, get_valueMap=self.get_valueMap, verbose_result=self.verbose_result)
                     if len(full_attr_df) < 1:
                         full_attr_df = current_attr_df.copy()

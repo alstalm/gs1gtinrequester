@@ -214,7 +214,7 @@ def get_table_from_file(args): # in_file, out_file
         printout_result = args.print
 
         input_df = pd.read_excel(input_file_full_path, dtype={'GTIN': object})
-        print('cli218: no_valueMap =', no_valueMap)
+
         gs1_request = gs1_requester(source_df=input_df, get_valueMap=operator.not_(no_valueMap), verbose_result=verbose_result)
 
         if eav:
@@ -278,8 +278,8 @@ def main():
 
 # ЭТОТ ФРАГМЕНТ ДЛЯ ОТЛАДКИ get_table_from_clipboard
 if __name__ == "__main__":
-    gtins = ['4660167673552']
-    attributes = ['WEB_90001807']
+    gtins = ['4610043551979']
+    attributes = ['WEB_90001810']
     subparser_name = 'clipboard'
     args = argparse.Namespace(gtins=gtins, attributes =attributes, printout_result = True, verbose = True, no_valueMap = False,   chunk=50) #func=func,
     get_table_from_clipboard(args)
